@@ -5,4 +5,4 @@
 layout: home
 ---
 
-Jekyll port of Magic tutorials
+
