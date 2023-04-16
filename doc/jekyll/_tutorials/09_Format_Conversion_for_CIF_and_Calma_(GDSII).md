@@ -55,7 +55,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Basics
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Basics
 
 CIF (Caltech Intermediate Form) and Calma Stream Format are standard
 layout description languages used to transfer mask-level layouts between
@@ -162,7 +162,7 @@ CIF above you didn’t quite get back what you started with; Section 3
 describes the differences that can occur). Although the discussion
 mentions only CIF, the same features and problems apply to Calma.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Styles
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Styles
 
 Magic usually knows several different ways to generate CIF/Calma from a
 given layout. Each of these ways is called a <span
@@ -230,7 +230,7 @@ edit the appropriate style in the <span class="ptmb7t-x-x-120">cifinput
 technology file. This process is described in “Magic Maintainer’s Manual
 \#2: The Technology File.”
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Rounding
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Rounding
 
 The units used for coordinates in Magic are generally different from
 those in CIF files. In Magic, most technology files use lambda-based
@@ -253,7 +253,7 @@ is no rounding or loss of accuracy in the operations. Rounding occurs
 only AFTER the geometrical operations, at the last possible instant
 before entering paint into the Magic database.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Non-Manhattan Geometries
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Non-Manhattan Geometries
 
 Magic only supports Manhattan features. When CIF or Calma files contain
 non-Manhattan features, they are approximated with Manhattan ones. The
@@ -284,7 +284,7 @@ assumes that round caps will be generated at each end of the wire. In
 Magic, square caps are generated instead. The top example of the figure
 above illustrates this approximation.
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Other Problems with Reading and Writing CIF
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Other Problems with Reading and Writing CIF
 
 You may have noticed that when you wrote out CIF for <span
 class="ptmb7t-x-x-120">tut9a </span>and read it back in again, you

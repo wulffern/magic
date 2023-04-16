@@ -19,7 +19,7 @@ Berkeley, CA 94720
 <span class="ptmri7t-x-x-120">(Updated by others, too.)</span>  
 This tutorial corresponds to Magic version 7.  
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>What is Magic?
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>What is Magic?
 
 Magic is an interactive system for creating and modifying VLSI circuit
 layouts. With Magic, you use a color graphics display and a mouse or
@@ -158,7 +158,7 @@ style="text-align: left; white-space: nowrap;"></td>
 <span class="id">Table 1: </span><span class="content">The Magic
 tutorials, maintenance manuals, and technology manuals.</span>
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>How to Get Help and Report Problems
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>How to Get Help and Report Problems
 
 There are several ways you can get help about Magic. If you are trying
 to learn about the system, you should start off with the Magic
@@ -226,7 +226,7 @@ that reproduces the problem and send us the relevant (small!) files so
 we can make it happen here. Or best of all, send us a bug fix along with
 a small example of the problem.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Graphics Configuration
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Graphics Configuration
 
 Magic can be run with different graphics hardware. The most common
 configuration is to run Magic under X11 on a workstation. Another way to
@@ -255,7 +255,7 @@ using the window manager.
 
 For now, you can skip to the next major section: ”Running Magic”.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Advanced X Use
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Advanced X Use
 
 The X11 driver can read in window sizing and font preferences from your
 <span class="ptmri7t-x-x-120">.Xdefaults </span>file. The following
@@ -353,7 +353,7 @@ class="pcrr7t-x-x-120">_DEFAULT 0</span><br />
 This causes Magic to avoid trying to allocate the first color in the
 colormap, which under Windows is fixed as black.
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Running Magic
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Running Magic
 
 From this point on, you should be sitting at a Magic workstation so you
 can experiment with the program as you read the manuals. Starting up
@@ -447,7 +447,7 @@ that Magic doesn’t know which serial line to use. To learn how to fix
 this, read about the <span class="ptmb7t-x-x-120">-g </span>switch in
 the magic(1) manual page. Also read the displays(5) manual page.
 
-### <span class="titlemark">6 </span> <span id="x1-60006"></span>The Box and the Cursor
+## <span class="titlemark">6 </span> <span id="x1-60006"></span>The Box and the Cursor
 
 Two things, called the <span class="ptmri7t-x-x-120">box </span>and the
 <span class="ptmri7t-x-x-120">cursor</span>, are used to select things
@@ -525,7 +525,7 @@ reshape so that the selected corner is at the cursor position but the
 diagonally opposite corner is unchanged. Try reshaping the box by each
 of its corners.
 
-### <span class="titlemark">7 </span> <span id="x1-70007"></span>Invoking Commands
+## <span class="titlemark">7 </span> <span id="x1-70007"></span>Invoking Commands
 
 Commands can be invoked in Magic in three ways: by pressing buttons on
 the mouse; by typing single keystrokes on the text keyboard (these are

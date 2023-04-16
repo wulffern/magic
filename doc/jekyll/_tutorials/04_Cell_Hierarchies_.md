@@ -55,7 +55,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 In Magic, a layout is a hierarchical collection of cells. Each cell
 contains three things: paint, labels, and subcells. Tutorial \#2 showed
@@ -68,7 +68,7 @@ improved if you use a hierarchical structure, including the efficiency
 of the design tools, the speed with which you can enter the design, and
 the ease with which you can modify it later.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Selecting and Viewing Hierarchical Designs
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Selecting and Viewing Hierarchical Designs
 
 “Hierarchical structure” means that each cell can contain other cells as
 components. To look at an example of a hierarchical layout, enter Magic
@@ -210,7 +210,7 @@ class="ptmb7t-x-x-120">X </span>is equivalent to <span
 class="ptmb7t-x-x-120">:unexpand</span>. Try out the various expansion
 and unexpansion facilities on <span class="ptmb7t-x-x-120">tut4a</span>.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Manipulating Subcells
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Manipulating Subcells
 
 There are a few other commands, in addition to the selection commands
 already described, that you’ll need in order to manipulate subcells. The
@@ -285,7 +285,7 @@ class="ptmb7t-x-x-120">:array</span>, they will be copied many times
 over to create the array. Try using the array command to replicate a
 small strip of paint.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Switching the Edit Cell
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Switching the Edit Cell
 
 At any given time, you are editing the definition of a single cell. This
 definition is called the <span class="ptmri7t-x-x-120">edit cell</span>.
@@ -361,7 +361,7 @@ new unnamed cell is loaded and you start editing from scratch. The <span
 class="ptmb7t-x-x-120">:load </span>command only changes the edit cell
 if there is not already an edit cell in another window.
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Subcell Usage Conventions
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Subcell Usage Conventions
 
 Overlaps between cells are occasionally useful to share busses and
 control lines running along the edges. However, overlaps cause the
@@ -409,7 +409,7 @@ less cell overlap the better. If you use extensive overlaps you’ll find
 that the tools run very slowly and that it’s hard to make modifications
 to the circuit.
 
-### <span class="titlemark">6 </span> <span id="x1-60006"></span>Instance Identifiers
+## <span class="titlemark">6 </span> <span id="x1-60006"></span>Instance Identifiers
 
 Instance identifiers are used to distinguish the different subcells
 within a single parent. The cell definition names cannot be used for
@@ -457,7 +457,7 @@ one-dimensional, there is a single subscript; when it is
 two-dimensional, the first subscript is for the y-dimension and the
 second for the x-dimension.
 
-### <span class="titlemark">7 </span> <span id="x1-70007"></span>Writing and Flushing Cells
+## <span class="titlemark">7 </span> <span id="x1-70007"></span>Writing and Flushing Cells
 
 When you make changes to your circuit in Magic, there is no immediate
 effect on the disk files that hold the cells. You must explicitly save
@@ -512,7 +512,7 @@ back and read in the cell as part of its parent. These aren’t serious
 problems; they just mean that Magic is doing extra work to update
 information in the parent to reflect the child’s new state.
 
-### <span class="titlemark">8 </span> <span id="x1-80008"></span>Search Paths
+## <span class="titlemark">8 </span> <span id="x1-80008"></span>Search Paths
 
 When many people are working on a large design, the design will probably
 be more manageable if different pieces of it can be located in different
@@ -581,7 +581,7 @@ the password file. This overrides all uses of ~cad within magic,
 including the ~cad seen in the search paths printed out by <span
 class="ptmb7t-x-x-120">:path</span>.
 
-### <span class="titlemark">9 </span> <span id="x1-90009"></span>Additional Commands
+## <span class="titlemark">9 </span> <span id="x1-90009"></span>Additional Commands
 
 This section describes a few additional cell-related commands that you
 may find useful. One of them is the command

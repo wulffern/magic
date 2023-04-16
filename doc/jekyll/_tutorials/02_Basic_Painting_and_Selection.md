@@ -57,7 +57,7 @@ u, U, v, w, W, z, Z, 4</td>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Cells and Paint
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Cells and Paint
 
 In Magic, a circuit layout is a hierarchical collection of <span
 class="ptmri7t-x-x-120">cells</span>. Each cell contains three things:
@@ -75,7 +75,7 @@ Plowing)” describes some more advanced features for manipulating paint.
 For information on how to build up cell hierarchies, see “Magic Tutorial
 \#4: Cell Hierarchies”.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Painting and Erasing
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Painting and Erasing
 
 Enter Magic to edit the cell <span class="ptmb7t-x-x-120">tut2a
 </span>(type <span class="ptmb7t-x-x-120">magic tut2a </span>to the Unix
@@ -152,7 +152,7 @@ class="ptmb7t-x-x-120">:erase </span><span class="ptmb8c-x-x-120">$
 </span>(<span class="ptmb8c-x-x-120">$ </span>is a pseudo-layer that
 means “all layers underneath the cursor”).
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Undo
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Undo
 
 There are probably going to be times when you’ll do things that you’ll
 later wish you hadn’t. Fortunately, Magic has an undo facility that you
@@ -188,7 +188,7 @@ class="ptmb7t-x-x-120">:undo </span>and <span
 class="ptmb7t-x-x-120">:redo </span>to work backwards and forwards
 through the changes you made.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>The Selection
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>The Selection
 
 Once you have painted a piece of layout, there are several commands you
 can invoke to modify the layout. Many of them are based on the <span
@@ -295,7 +295,7 @@ help</span></td>
 </tbody>
 </table>
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Operations on the Selection
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Operations on the Selection
 
 Once you’ve made a selection, there are a number of operations you can
 perform on it:
@@ -403,7 +403,7 @@ class="ptmb7t-x-x-120">tut2b </span>cell. Experiment with the selection
 commands. Remember that you can use <span class="ptmb7t-x-x-120">:undo
 </span>to back out of trouble.
 
-### <span class="titlemark">6 </span> <span id="x1-60006"></span>Labels
+## <span class="titlemark">6 </span> <span id="x1-60006"></span>Labels
 
 Labels are pieces of text attached to the paint of a cell. They are used
 to provide information to other tools that will process the circuit.
@@ -522,7 +522,7 @@ space. Technically, this will erase all paint layers and labels too.
 However, since the box has zero area, erasing paint has no effect: only
 the labels are erased.
 
-### <span class="titlemark">7 </span> <span id="x1-70007"></span>Labelling Conventions
+## <span class="titlemark">7 </span> <span id="x1-70007"></span>Labelling Conventions
 
 When creating labels, Magic will permit you to use absolutely any text
 whatsoever. However, many other tools, and even parts of Magic, expect
@@ -586,7 +586,7 @@ standard router, see “Magic Tutorial \#7: Netlists and Routing”. Other
 labeling conventions are used by the Garouter and Irouter, consult their
 respective tutorials for details.
 
-### <span class="titlemark">8 </span> <span id="x1-80008"></span>Files and Formats
+## <span class="titlemark">8 </span> <span id="x1-80008"></span>Files and Formats
 
 Magic provides a variety of ways to save your cells on disk. Normally,
 things are saved in a special Magic format. Each cell is a separate
@@ -663,7 +663,7 @@ used to save the cell (no “.mag” extension).
 Magic can also read and write files in CIF and Calma Stream formats. See
 “Magic Tutorial \#9: Format Conversion for CIF and Calma” for details.
 
-### <span class="titlemark">9 </span> <span id="x1-90009"></span>Plotting
+## <span class="titlemark">9 </span> <span id="x1-90009"></span>Plotting
 
 Magic can generate hardcopy plots of layouts in four ways: postscript
 (color), versatec (black-and-white or color), gremlin, and pixels (a
@@ -756,7 +756,7 @@ printers. For details, read about the various <span
 class="ptmb7t-x-x-120">:plot </span>command options in the <span
 class="ptmri7t-x-x-120">man</span> page.
 
-### <span class="titlemark">10 </span> <span id="x1-1000010"></span>Utility Commands
+## <span class="titlemark">10 </span> <span id="x1-1000010"></span>Utility Commands
 
 There are several additional commands that you will probably find useful
 once you start working on real cells. The command
@@ -900,7 +900,7 @@ meaning in Magic. This macro is always defined by the system to be the
 last long command you typed. Whenever you’d like to repeat a long
 command, all you have to do is use the dot macro.
 
-### <span class="titlemark">11 </span> <span id="x1-1100011"></span>What the Layers Mean
+## <span class="titlemark">11 </span> <span id="x1-1100011"></span>What the Layers Mean
 
 The paint layers available in Magic are different from those that you
 may be used to in Caesar and other systems because they don’t correspond

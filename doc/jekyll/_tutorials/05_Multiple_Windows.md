@@ -55,7 +55,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 A window is a rectangular viewport. You can think of it as a magnifying
 glass that may be moved around on your chip. Magic initially displays a
@@ -72,9 +72,9 @@ show the big picture while other windows show magnified views of the
 areas where the box needs to be aligned. The box can then be positioned
 accurately in these magnified windows.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Manipulating Windows
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Manipulating Windows
 
-#### <span class="titlemark">2.1 </span> <span id="x1-30002.1"></span>Opening and Closing Windows
+### <span class="titlemark">2.1 </span> <span id="x1-30002.1"></span>Opening and Closing Windows
 
 Initially Magic displays one large window. The
 
@@ -120,7 +120,7 @@ class="ptmb7t-x-x-120">:closewindow</span></td>
 or use the macro <span class="ptmb7t-x-x-120">O</span>. Point to a
 portion of the original window and close it.
 
-#### <span class="titlemark">2.2 </span> <span id="x1-40002.2"></span>Resizing and Moving Windows
+### <span class="titlemark">2.2 </span> <span id="x1-40002.2"></span>Resizing and Moving Windows
 
 If you have been experimenting with Magic while reading this you will
 have noticed that windows opened by <span
@@ -223,7 +223,7 @@ To try this, click the middle button over the caption of the window. The
 window will now fill the entire screen. Click in the caption again and
 the window will shrink back to its former size.
 
-#### <span class="titlemark">2.3 </span> <span id="x1-50002.3"></span>Shuffling Windows
+### <span class="titlemark">2.3 </span> <span id="x1-50002.3"></span>Shuffling Windows
 
 By now you know how to open, close, and resize windows. This is
 sufficient for most purposes, but sometimes you want to look at a window
@@ -239,7 +239,7 @@ commands to move them around. You’ll see that overlapping windows behave
 just like sheets of paper: the ones on top obscure portions of the ones
 underneath.
 
-#### <span class="titlemark">2.4 </span> <span id="x1-60002.4"></span>Scrolling Windows
+### <span class="titlemark">2.4 </span> <span id="x1-60002.4"></span>Scrolling Windows
 
 Some of the windows have thick bars on the left and bottom borders.
 These are called <span class="ptmri7t-x-x-120">scroll bars</span>, and
@@ -291,7 +291,7 @@ factor of 2, and clicking the right mouse button zooms in by a factor of
 visible and is equivalent to the <span class="ptmb7t-x-x-120">:view
 </span>command.
 
-#### <span class="titlemark">2.5 </span> <span id="x1-70002.5"></span>Saving Window Configurations
+### <span class="titlemark">2.5 </span> <span id="x1-70002.5"></span>Saving Window Configurations
 
 After setting up a bunch of windows you may want to save the
 configuration (for example, you may be partial to a set of 3
@@ -313,7 +313,7 @@ stay on the same kind of display; if you create a file under X11 and
 then <span class="ptmb7t-x-x-120">:source </span>it under SunView, you
 might not get the same positions since the coordinate systems may vary.)
 
-### <span class="titlemark">3 </span> <span id="x1-80003"></span>How Commands Work Inside of Windows
+## <span class="titlemark">3 </span> <span id="x1-80003"></span>How Commands Work Inside of Windows
 
 Each window has a caption at the top. Here is an example:
 
@@ -387,7 +387,7 @@ you will have to point to one before executing a command like <span
 class="ptmb7t-x-x-120">:grid</span>—otherwise you may not affect the
 window that you intended!
 
-### <span class="titlemark">4 </span> <span id="x1-90004"></span>Special Windows
+## <span class="titlemark">4 </span> <span id="x1-90004"></span>Special Windows
 
 In addition to providing multiple windows on different areas of a
 layout, Magic provides several special types of windows that display
@@ -424,7 +424,7 @@ kind of window or the command may be misinterpreted. For example, the
 <span class="ptmb7t-x-x-120">:extract</span> command means one thing in
 a layout window and something totally different in a netlist window.
 
-### <span class="titlemark">5 </span> <span id="x1-100005"></span>Color Editing
+## <span class="titlemark">5 </span> <span id="x1-100005"></span>Color Editing
 
 Special windows of type <span class="ptmb7t-x-x-120">color </span>are
 used to edit the red, green, and blue intensities of the colors

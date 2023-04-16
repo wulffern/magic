@@ -4,6 +4,10 @@ title: Commands
 math: true
 ---
 
+* TOC
+{:toc }
+
+
 
     
 ### Table of Contents
@@ -11101,10 +11105,6 @@ called.
 ### See Also:
 
 [*wire*](#wire)  
-
-Magic-7.3 Command Reference
-
-# ![Magic VLSI Layout Tool Version 8.2](graphics/magic_title8_2.png) <img src="graphics/magic_OGL_sm.gif" data-align="top" alt="*" />
 
 ## wire
 

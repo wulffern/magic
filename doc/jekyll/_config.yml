@@ -25,11 +25,13 @@ baseurl: "/magic" # the subpath of your site, e.g. /blog
 url: "analogicus.com" # the base hostname & protocol for your site, e.g. http://example.com
 
 
+  #
 # Build settings
 show_excerpts: false
 
 minima:
   skin: classic
+
 
 collections:
   tutorials:
@@ -37,8 +39,15 @@ collections:
   man:
     output: true
 
+
 # Build settings
 markdown: kramdown
+
+kramdown:
+   #html_to_native: true
+   hard_wrap: false
+   syntax_highlighter: rouge
+   toc_levels: 1..2
 
 
 plugins:

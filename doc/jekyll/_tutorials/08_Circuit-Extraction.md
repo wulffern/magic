@@ -79,7 +79,7 @@ New programs: <span class="ptmri7t-x-x-120">ext2spice</span> (1) and
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 This tutorial covers the use of Magic’s circuit extractor. The extractor
 computes from the layout the information needed to run simulation tools
@@ -112,7 +112,7 @@ class="ptmri7t-x-x-120">ext2sim</span> (1), <span
 class="ptmri7t-x-x-120">ext2spice</span> (1), or <span
 class="ptmri7t-x-x-120">extcheck</span> (1).
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Basic Extraction
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Basic Extraction
 
 You can use Magic’s extractor in one of several ways. Normally it is not
 necessary to extract all cells in a layout. To extract only those cells
@@ -253,7 +253,7 @@ showparents</span></td>
 
 Try this command as well.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Feedback: Errors and Warnings
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Feedback: Errors and Warnings
 
 When the extractor encounters problems, it leaves feedback in the form
 of stippled white rectangular areas on the screen. Each area covers the
@@ -425,9 +425,9 @@ with <span class="ptmb7t-x-x-120">:extract warn all</span>. Now extract
 <span class="ptmb7t-x-x-120">:extract</span>, and examine the feedback
 for examples of fatal errors and warnings.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Advanced Circuit Extraction
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Advanced Circuit Extraction
 
-#### <span class="titlemark">4.1 </span> <span id="x1-50004.1"></span>Lengths
+### <span class="titlemark">4.1 </span> <span id="x1-50004.1"></span>Lengths
 
 The Magic extractor has a rudimentary ability to compute wire lengths
 between specific named points in a circuit. This feature is intended for
@@ -496,7 +496,7 @@ of a design. Also, because it’s not hierarchical, it can take a long
 time for long, complex wires such as power and ground nets. This feature
 is still experimental and subject to change.
 
-#### <span class="titlemark">4.2 </span> <span id="x1-60004.2"></span>Resistance
+### <span class="titlemark">4.2 </span> <span id="x1-60004.2"></span>Resistance
 
 Magic provides for more accurate resistance extraction using the <span
 class="ptmb7t-x-x-120">:extresis </span>command. <span
@@ -504,7 +504,7 @@ class="ptmb7t-x-x-120">:extresis </span>provides a detailed
 resistance/capacitance description for nets where parasitic resistance
 is likely to significantly affect circuit timing.
 
-##### <span class="titlemark">4.2.1 </span> <span id="x1-70004.2.1"></span>Tutorial Introduction
+#### <span class="titlemark">4.2.1 </span> <span id="x1-70004.2.1"></span>Tutorial Introduction
 
 To try out the resistance extractor, load in the cell <span
 class="ptmb7t-x-x-120">tut8r</span>. Extract it using <span
@@ -596,7 +596,7 @@ Comparing the two files, <span class="ptmb7t-x-x-120">tut8r.sim
 the latter has the nodes net1 and net2 split into several parts, with
 resistors added to connect the new nodes together.
 
-##### <span class="titlemark">4.2.2 </span> <span id="x1-80004.2.2"></span>General Notes on using the resistance extractor
+#### <span class="titlemark">4.2.2 </span> <span id="x1-80004.2.2"></span>General Notes on using the resistance extractor
 
 To use <span class="ptmb7t-x-x-120">:extresis</span>, the circuit must
 first be extracted using <span class="ptmb7t-x-x-120">:extract
@@ -632,7 +632,7 @@ class="ptmri7t-x-x-120">not </span>performed hierarchically; it should
 only be done in the root cell of a design and can take a long time for
 complex wires.
 
-##### <span class="titlemark">4.2.3 </span> <span id="x1-90004.2.3"></span>Options, Features, Caveats and Bugs
+#### <span class="titlemark">4.2.3 </span> <span id="x1-90004.2.3"></span>Options, Features, Caveats and Bugs
 
 The following is a list of command line options and the arguments that
 they take.
@@ -706,7 +706,7 @@ Following is a description of <span class="ptmb7t-x-x-120">:extresis
     transistors driving a given signal may be located in a different
     cell.
 
-##### <span class="titlemark">4.2.4 </span> <span id="x1-100004.2.4"></span>Technology File Changes
+#### <span class="titlemark">4.2.4 </span> <span id="x1-100004.2.4"></span>Technology File Changes
 
 Certain changes must be made in the extract section of the technology
 file to support resistance extraction. These include the <span
@@ -719,7 +719,7 @@ class="ptmb7t-x-x-120">gscap </span>parts of the fet line MUST be set;
 the resistance extractor uses them to calculate RC time constants for
 the circuit.
 
-### <span class="titlemark">5 </span> <span id="x1-110005"></span>Extraction Details and Limitations
+## <span class="titlemark">5 </span> <span id="x1-110005"></span>Extraction Details and Limitations
 
 This section explores in greater depth what gets extracted by Magic, as
 well as the limitations of the circuit extractor. A detailed explanation
@@ -743,7 +743,7 @@ class="ptmri7t-x-x-120">2</span>, …, <span
 class="ptmri7t-x-x-120">N</span>.</span></figcaption>
 </figure>
 
-#### <span class="titlemark">5.1 </span> <span id="x1-120005.1"></span>Nodes
+### <span class="titlemark">5.1 </span> <span id="x1-120005.1"></span>Nodes
 
 Magic approximates the pieces of interconnect between transistors as
 “nodes”. A node is like an equipotential region, but also includes a
@@ -777,7 +777,7 @@ class="ptmri7t-x-x-120">crystal</span> (1). The man page <span
 class="ptmri7t-x-x-120">ext</span> (5) provides additional information
 about node attributes.
 
-#### <span class="titlemark">5.2 </span> <span id="x1-130005.2"></span>Resistance
+### <span class="titlemark">5.2 </span> <span id="x1-130005.2"></span>Resistance
 
 Magic extracts a lumped resistance for each node, rather than a
 point-to-point resistance between each pair of devices connected to that
@@ -872,7 +872,7 @@ In addition, each type of material has capacitance per unit
 area.</span></figcaption>
 </figure>
 
-#### <span class="titlemark">5.3 </span> <span id="x1-140005.3"></span>Capacitance
+### <span class="titlemark">5.3 </span> <span id="x1-140005.3"></span>Capacitance
 
 Capacitance to substrate comes from two different sources. Each type of
 material has a capacitance to substrate per unit area. Each type of edge
@@ -1013,7 +1013,7 @@ class="ptmb7t-x-x-120">:extract no coupling</span>. To re-enable
 computation of adjustments, use <span class="ptmb7t-x-x-120">:extract
 do</span> <span class="ptmb7t-x-x-120">adjustment</span>.
 
-#### <span class="titlemark">5.4 </span> <span id="x1-150005.4"></span>Transistors
+### <span class="titlemark">5.4 </span> <span id="x1-150005.4"></span>Transistors
 
 Like the resistances of nodes, the lengths and widths of transistors are
 approximated. Magic computes the contribution to the total perimeter by
@@ -1262,7 +1262,7 @@ class="ptmb7t-x-x-120">NSubstrateNode</span>), or in a well that isn’t
 tied to <span class="ptmb7t-x-x-120">GND! </span>with a substrate
 contact.
 
-### <span class="titlemark">6 </span> <span id="x1-160006"></span>Extraction styles
+## <span class="titlemark">6 </span> <span id="x1-160006"></span>Extraction styles
 
 Magic usually knows several different ways to extract a circuit from a
 given layout. Each of these ways is called a <span
@@ -1311,7 +1311,7 @@ class="ptmb7t-x-x-120">extract </span>section of the technology file.
 This process is described in “Magic Maintainer’s Manual \#2: The
 Technology File.”
 
-### <span class="titlemark">7 </span> <span id="x1-170007"></span>Flattening Extracted Circuits
+## <span class="titlemark">7 </span> <span id="x1-170007"></span>Flattening Extracted Circuits
 
 Unfortunately, very few tools exist to take advantage of the <span
 class="ptmri7t-x-x-120">ext</span> (5) format files produced by Magic’s

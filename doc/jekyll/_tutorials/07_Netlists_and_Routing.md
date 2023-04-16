@@ -70,7 +70,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 This tutorial describes how to use Magic’s automatic routing tools to
 make interconnections between subcells in a design. In addition to the
@@ -117,7 +117,7 @@ Sections 8 and 9 discuss how you can modify your design in light of this
 feedback to improve its routability. You’ll probably need to iterate a
 few times until the routing is successful.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Terminals and Netlists
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Terminals and Netlists
 
 A netlist is a file that describes a set of desired connections. It
 contains one or more <span class="ptmri7t-x-x-120">nets</span>. Each net
@@ -412,7 +412,7 @@ class="ptmri7t-x-x-120">feed throughs</span>: entering a cell at one
 terminal to make one connection, and exiting through an equivalent
 terminal on the way to make another connection for the same net.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Menu for Label Editing
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Menu for Label Editing
 
 Magic provides a special menu facility to assist you in placing terminal
 labels and editing netlists. To make the menu appear, invoke the Magic
@@ -523,7 +523,7 @@ information about feedback areas; see the Magic manual page for details,
 or type <span class="ptmb7t-x-x-120">:feedback help </span>for a
 synopsis of the options.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Netlist Editing
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Netlist Editing
 
 After placing terminal labels, the next step is to specify the
 connections between them; this is called netlist editing. The bottom
@@ -773,7 +773,7 @@ class="ptmb7t-x-x-120">Show </span>is an old command that pre-dates the
 selection interface, but we’ve left it in Magic because some people find
 it useful.
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Netlist Files
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Netlist Files
 
 Netlists are stored on disk in ordinary text files. You are welcome to
 edit those files by hand or to write programs that generate the netlists
@@ -782,7 +782,7 @@ editor or by a high-level simulator. See the manual page <span
 class="ptmri7t-x-x-120">net(5) </span>for a description of netlist file
 format.
 
-### <span class="titlemark">6 </span> <span id="x1-60006"></span>Running the Router
+## <span class="titlemark">6 </span> <span id="x1-60006"></span>Running the Router
 
 Once you’ve created a netlist, it is relatively easy to invoke the
 router. First, place the box around the area you’d like Magic to
@@ -1104,7 +1104,7 @@ style="text-align: left; white-space: nowrap;"></td>
 <span class="id">Table 3: </span><span class="content">A summary of all
 of Magic router options.</span>
 
-### <span class="titlemark">7 </span> <span id="x1-70007"></span>How the Router Works
+## <span class="titlemark">7 </span> <span id="x1-70007"></span>How the Router Works
 
 In order to make the router produce the best possible results, it helps
 to know a little bit about how it works. The router runs in three
@@ -1159,7 +1159,7 @@ During the routing Magic generates <span class="ptmri7t-x-x-120">stems
 channels. Notice that there’s space left by Magic between the subcells
 and the channels; this space is used by the stem generator.
 
-### <span class="titlemark">8 </span> <span id="x1-80008"></span>What to do When the Router Fails
+## <span class="titlemark">8 </span> <span id="x1-80008"></span>What to do When the Router Fails
 
 Don’t be surprised if the router is unable to make all the connections
 the first time you try it on a large circuit. Unless you have extra
@@ -1170,7 +1170,7 @@ developed, so we’d like to hear about techniques you use to improve
 routability. If you discover new techniques, send us mail and we’ll add
 them to this section.
 
-#### <span class="titlemark">8.1 </span> <span id="x1-90008.1"></span>Channel Structure
+### <span class="titlemark">8.1 </span> <span id="x1-90008.1"></span>Channel Structure
 
 One of the first things to check when the router fails is the channel
 structure. If using the Magic router, type <span
@@ -1189,7 +1189,7 @@ that there are as few channels as possible and they are as large as
 possible (before doing this you’ll probably want to get rid of the
 existing routing by undo-ing or by flushing the edit cell).
 
-#### <span class="titlemark">8.2 </span> <span id="x1-100008.2"></span>Stems
+### <span class="titlemark">8.2 </span> <span id="x1-100008.2"></span>Stems
 
 Another problem has to do with the stem generator. Stems are the pieces
 of wiring that connect terminals up to grid points on the edges of
@@ -1221,7 +1221,7 @@ could river-route out from tightly-spaced terminals to grid lines (which
 it can’t), it would require *N*<sup>2</sup> space to route out *N*
 lines; it takes less area to stretch the PLA.
 
-#### <span class="titlemark">8.3 </span> <span id="x1-110008.3"></span>Obstacles
+### <span class="titlemark">8.3 </span> <span id="x1-110008.3"></span>Obstacles
 
 The router tends to have special difficulties with obstacles running
 along the edges of channels. When you’ve placed a power wire or other
@@ -1254,7 +1254,7 @@ with its left and bottom edges along the grid lines. Because of the way
 the routing tools work, this approach results in the least possible
 amount of lost routing space.
 
-### <span class="titlemark">9 </span> <span id="x1-120009"></span>More Netlist Commands
+## <span class="titlemark">9 </span> <span id="x1-120009"></span>More Netlist Commands
 
 In addition to the netlist menu buttons and commands described in
 Section 4, there are a number of other netlist commands you can invoke

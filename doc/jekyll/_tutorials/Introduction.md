@@ -11,7 +11,7 @@ math: true
 
 This tutorial corresponds to Magic version 7.  
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 This version of Magic, version 6, gathers together work done by numerous
 people at several institutions since Magic version 4 was released from
@@ -115,7 +115,7 @@ New features in Magic Version 6 include:
     everybody that has reported bugs in the past. If you find a new bug,
     please report it as mentioned below.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Distribution Information
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Distribution Information
 
 This version of Magic is available via FTP. Contact “<span
 class="pcrr7t-x-x-120">magic@decwrl.dec.com</span>” for information.
@@ -137,7 +137,7 @@ Berkeley, CA 94720</td>
 </tbody>
 </table>
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Bug Reports
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Bug Reports
 
 Maintenance of Magic is a volunteer effort. Please send descriptions of
 bugs via InterNet e-mail to “<span
@@ -145,7 +145,7 @@ class="pcrr7t-x-x-120">magic@decwrl.dec.com</span>” or via Uucp e-mail
 to “<span class="pcrr7t-x-x-120">decwrl!magic</span>”. If you develop a
 fix for the problem, please send that too!
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Changes for Magic maintainers
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Changes for Magic maintainers
 
 Previous releases of Magic expected to find their system files in the
 home directory of the user <span class="ptmb7t-x-x-120">cad</span>. The
@@ -155,7 +155,7 @@ class="ptmb7t-x-x-120">CAD</span><span class="ptmb7t-x-x-120">\_HOME
 </span>shell environment variable. If this variable is set, magic will
 use that location instead of the ~cad it finds in the password file.
 
-#### <span class="titlemark">4.1 </span> <span id="x1-50004.1"></span>INSTALLING MAGIC
+### <span class="titlemark">4.1 </span> <span id="x1-50004.1"></span>INSTALLING MAGIC
 
 The distribution tape contains a version of Magic ready to run on
 Digital’s line of Ultrix RISC workstations, such as the DECstation 3100.
@@ -184,7 +184,7 @@ Included in this documentation is a set of Magic maintainer’s manuals.
 These should be read by anybody interested in modifying Magic or by
 anybody that is having difficulty installing it on their system.
 
-#### <span class="titlemark">4.2 </span> <span id="x1-60004.2"></span>Technology file changes
+### <span class="titlemark">4.2 </span> <span id="x1-60004.2"></span>Technology file changes
 
 Users of Magic 4 should have little trouble switching to Magic 6.
 
@@ -200,7 +200,7 @@ styles section of the scmos technology file on the distribution tape.
 You’ll also need to include these display styles in your <span
 class="ptmri7t-x-x-120">.dstyle</span> file.
 
-### <span class="titlemark">5 </span> <span id="x1-70005"></span>Beta-test Sites
+## <span class="titlemark">5 </span> <span id="x1-70005"></span>Beta-test Sites
 
 We’d like to thank the beta-test sites that tried out this version of
 Magic, reported bugs and fixes in a timely manner, and ported the code

@@ -17,7 +17,7 @@ math: true
 """
 
 
-def convertFiles(files,dirname,outputdir):
+def convertFiles(files,dirname,outputdir,replace=False):
 
     if(not os.path.exists(outputdir)):
         os.system(f"mkdir {outputdir}")
@@ -29,10 +29,12 @@ def convertFiles(files,dirname,outputdir):
             fo.write(ss.replace("{title}",name))
             with open(f"{dirname}/{f}.md") as fi:
                 for line in fi:
+                    if(replace):
+                        line = re.sub("^###","##",line)
                     fo.write(line)
 
 #---------------------------------------------------------------
-#- Convert latexfiles
+#- Convert latexfiles to markdown
 #---------------------------------------------------------------
 txfiles = {
     "introduction": "Introduction",
@@ -64,13 +66,7 @@ for f in txfiles:
     if(not os.path.exists(f"{mdfiles}/{f}.md")):
         os.system(f"cd {latexfiles}/; pandoc -s  -t markdown_strict {f}.html -o ../jekyll/{mdfiles}/{f}.md")
 
-convertFiles(txfiles,mdfiles,"_tutorials")
-#---------------------------------------------------------------
-#- Write tutorials
-#---------------------------------------------------------------
-
-
-
+convertFiles(txfiles,mdfiles,"_tutorials",replace=True)
 
 #---------------------------------------------------------------
 #- Convert shortcuts to markdown
@@ -156,6 +152,9 @@ def readAndFilter(name):
             if(re.search("graphics/line1.gif",l)):
                 output = 0
 
+            if(re.search("Command Reference",l)):
+                output = 0
+
             l = re.sub("^> *","",l)
             l = re.sub("^> *","",l)
 
@@ -185,6 +184,10 @@ layout: post
 title: Commands
 math: true
 ---
+
+* TOC
+{:toc }
+
 
 
     """)

@@ -57,7 +57,7 @@ class="math inline">&gt;</span></td>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 Tutorial \#2 showed you the basic facilities for placing paint and
 labels, selecting, and manipulating the things that are selected. This
@@ -73,7 +73,7 @@ allows you to re-arrange pieces of your circuit without having to worry
 about design-rule violations being created: plowing automatically moves
 things out of the way to avoid trouble.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Wiring
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Wiring
 
 The box-and-painting paradigm described in Tutorial \#2 is sufficient to
 create any possible layout, but it’s relatively inefficient since three
@@ -88,7 +88,7 @@ the end of the previous wire segment and the cursor location. Each
 additional button click adds an additional segment. The wiring interface
 also makes it easy for you to place contacts.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Tools
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Tools
 
 Before learning about wiring, you’ll need to learn about tools. Until
 now, when you’ve pressed mouse buttons in layout windows the buttons
@@ -145,7 +145,7 @@ paint in <span class="ptmb7t-x-x-120">tut3a</span>, and type the <span
 class="ptmb7t-x-x-120">s </span>macro. A chunk gets selected just as it
 does with the box tool.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Basic Wiring
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Basic Wiring
 
 There are three basic wiring commands: selecting the wiring material,
 adding a leg, and adding a contact. This section describes the first two
@@ -208,7 +208,7 @@ class="ptmb7t-x-x-120">:wire </span>command options just as they do
 elsewhere in Magic). This command will generate a short horizontal leg
 instead of a longer vertical one.
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Contacts
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Contacts
 
 When the wiring tool is active, the middle mouse button places contacts.
 Undo all of your changes to <span class="ptmb7t-x-x-120">tut3a </span>by
@@ -235,7 +235,7 @@ technology file (see “Magic Maintainer’s Manual \#2: The Technology
 File”). For this technology, Magic doesn’t know how to make contacts
 directly between purple and red.
 
-### <span class="titlemark">6 </span> <span id="x1-60006"></span>Wiring and the Box
+## <span class="titlemark">6 </span> <span id="x1-60006"></span>Wiring and the Box
 
 In the examples so far, each new wire leg appeared to be drawn from the
 end of the previous leg to the cursor position. In fact, however, the
@@ -268,7 +268,7 @@ class="ptmri7t-x-x-120">layer width</span></td>
 Then move the box where you’d like the wire to start, switch to the
 wiring tool, and right-click to add legs.
 
-### <span class="titlemark">7 </span> <span id="x1-70007"></span>Wiring and the Selection
+## <span class="titlemark">7 </span> <span id="x1-70007"></span>Wiring and the Selection
 
 Each time you paint a new wire leg or contact using the wiring commands,
 Magic selects the new material just as if you had placed the cursor over
@@ -288,7 +288,7 @@ right the first time, but it’s usually easy to tell whether the leg is
 right once it’s painted. If it’s wrong, then you can use the stretching
 commands to shift it over one unit at a time until it’s correct.
 
-### <span class="titlemark">8 </span> <span id="x1-80008"></span>Bundles of Wires
+## <span class="titlemark">8 </span> <span id="x1-80008"></span>Bundles of Wires
 
 Magic provides two additional commands that are useful for running <span
 class="ptmri7t-x-x-120">bundles </span>of parallel wires. The commands
@@ -387,7 +387,7 @@ class="ptmb7t-x-x-120">:array </span>to copy them across the top of the
 bundle. Finally, use <span class="ptmb7t-x-x-120">:fill </span>again to
 extend the blue bundle farther up.
 
-### <span class="titlemark">9 </span> <span id="x1-90009"></span>Plowing
+## <span class="titlemark">9 </span> <span id="x1-90009"></span>Plowing
 
 Magic contains a facility called <span class="ptmri7t-x-x-120">plowing
 </span>that you can use to stretch and compact cells. The basic plowing

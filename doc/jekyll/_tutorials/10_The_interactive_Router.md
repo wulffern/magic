@@ -53,7 +53,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Introduction
 
 The Magic interactive router, <span
 class="ptmri7t-x-x-120">Irouter</span>, provides an interactive
@@ -84,7 +84,7 @@ This tutorial provides detailed information on the use of the Irouter.
 On-line help, Irouter subcommands, Irouter parameters, and hint-layers
 are explained.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Getting Started—‘Cntl-R’, ‘Cntl-N’, ‘:iroute’ and ‘:iroute help’
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Getting Started—‘Cntl-R’, ‘Cntl-N’, ‘:iroute’ and ‘:iroute help’
 
 To make a connection with the Irouter, place the cursor over one end of
 the desired connection (the <span
@@ -181,7 +181,7 @@ Usage information on a subcommand can be obtained by typing
 As with Magic in general, unique abbreviations of subcommands and most
 of their arguments are permitted. Case is generally ignored.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>:Undo and Cntl-C
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>:Undo and Cntl-C
 
 As with other Magic commands, the results of <span
 class="ptmb7t-x-x-120">:iroute </span>can be undone with <span
@@ -195,7 +195,7 @@ speed things up by interrupting it, resetting performance related
 parameters, and trying again. The details of parameters and hints are
 described later in this document.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>More about Making Connections—‘:iroute route’
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>More about Making Connections—‘:iroute route’
 
 Start points for routes can be specified via the cursor, labels, or
 coordinates. Destination areas can be specified via the box, labels,
@@ -222,7 +222,7 @@ region. Try moving it toward the edge. (Alternately see the discussion
 of the <span class="ptmri7t-x-x-120">penetration </span>parameter in the
 wizard section below.)
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Hints
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Hints
 
 Magic has three built-in layers for graphical control of the Irouter,
 <span class="ptmb7t-x-x-120">fence </span>(<span
@@ -233,7 +233,7 @@ class="ptmb7t-x-x-120">r</span>). These layers can be painted and erased
 just like other Magic layers. The effect each has on the Irouter is
 described below.
 
-#### <span class="titlemark">5.1 </span> <span id="x1-60005.1"></span>The Fence Layer
+### <span class="titlemark">5.1 </span> <span id="x1-60005.1"></span>The Fence Layer
 
 The Irouter won’t cross fence boundaries. Thus the fence layer is useful
 both for carving out routing-regions and for blocking routing in given
@@ -241,7 +241,7 @@ areas. It is frequently useful to indicate the broad path of one or a
 series of routes with fence. In addition to guiding the route, the use
 of fences can greatly speed up the router by limiting the search.
 
-#### <span class="titlemark">5.2 </span> <span id="x1-70005.2"></span>The Magnet Layer
+### <span class="titlemark">5.2 </span> <span id="x1-70005.2"></span>The Magnet Layer
 
 Magnets attract the route. They can be used to pull routes in a given
 direction, e.g., towards one edge of a channel. Over use of magnets can
@@ -251,7 +251,7 @@ problems with magnets and performance, see also the discussion of the
 <span class="ptmri7t-x-x-120">penalty </span>parameter in the wizard
 section below.)
 
-#### <span class="titlemark">5.3 </span> <span id="x1-80005.3"></span>The Rotate Layer
+### <span class="titlemark">5.3 </span> <span id="x1-80005.3"></span>The Rotate Layer
 
 The Irouter associates different weights with horizontal and vertical
 routes (see the layer-parameter section below). This is so that a
@@ -267,7 +267,7 @@ directions on one leg of the <span class="ptmb7t-x-x-120">L </span>are
 the opposite from the other, and thus one leg needs to be marked with
 the rotate layer.
 
-### <span class="titlemark">6 </span> <span id="x1-90006"></span>Subcells
+## <span class="titlemark">6 </span> <span id="x1-90006"></span>Subcells
 
 As with painting and other operations in Magic, the Irouter’s output is
 written to the cell being edited. What the router sees, that is which
@@ -286,7 +286,7 @@ contents of unexpanded subcells. Routes can be terminated at unexpanded
 subcells in the same fashion that connections to other pre-existing
 features are made.
 
-### <span class="titlemark">7 </span> <span id="x1-100007"></span>Layer Parameters—‘:iroute layers’
+## <span class="titlemark">7 </span> <span id="x1-100007"></span>Layer Parameters—‘:iroute layers’
 
 <span class="ptmri7t-x-x-120">Route-layers</span>, specified in the
 <span class="ptmb7t-x-x-120">mzrouter </span>section of the technology
@@ -409,7 +409,7 @@ There are six layer parameters.
 -   <span class="ptmb7t-x-x-120">hintcost </span>  
     Cost per unit-area between actual route and magnet segment.
 
-### <span class="titlemark">8 </span> <span id="x1-110008"></span>Contact Parameters—‘:iroute contacts’
+## <span class="titlemark">8 </span> <span id="x1-110008"></span>Contact Parameters—‘:iroute contacts’
 
 The <span class="ptmb7t-x-x-120">contacts </span>subcommand gives access
 to a table of parameters for contact-types used in routing, one row of
@@ -431,7 +431,7 @@ There are three contact-parameters.
 -   <span class="ptmb7t-x-x-120">cost </span>  
     Cost per contact charged by the Irouter cost-function.
 
-### <span class="titlemark">9 </span> <span id="x1-120009"></span>Spacing Parameters—‘:iroute spacing’
+## <span class="titlemark">9 </span> <span id="x1-120009"></span>Spacing Parameters—‘:iroute spacing’
 
 The spacing parameters specify minimum spacings between the route-types
 (route-layers and route-contacts) and arbitrary Magic types. These
@@ -522,7 +522,7 @@ If subcell designs are constrained in a fashion that permits closer
 spacings to some layers, the <span class="ptmb7t-x-x-120">SUBCELL
 </span>spacings can be changed to take advantage of this.
 
-### <span class="titlemark">10 </span> <span id="x1-1300010"></span>Search Parameters—‘:search’
+## <span class="titlemark">10 </span> <span id="x1-1300010"></span>Search Parameters—‘:search’
 
 The Mzrouter search is windowed. Early in the search only partial paths
 near the start point are considered; as the search progresses the window
@@ -557,7 +557,7 @@ If <span class="ptmri7t-x-x-120">value </span>is omitted, the current
 value is printed, if <span class="ptmri7t-x-x-120">parameter </span>is
 omitted as well, both parameter values are printed.
 
-### <span class="titlemark">11 </span> <span id="x1-1400011"></span>Messages—‘:iroute verbosity’
+## <span class="titlemark">11 </span> <span id="x1-1400011"></span>Messages—‘:iroute verbosity’
 
 The number of messages printed by the Irouter is controlled by
 
@@ -576,7 +576,7 @@ class="ptmb7t-x-x-120">1 </span>(the default) results in short messages.
 A value of <span class="ptmb7t-x-x-120">2 </span>causes statistics to be
 printed.
 
-### <span class="titlemark">12 </span> <span id="x1-1500012"></span>Version—‘:iroute version’
+## <span class="titlemark">12 </span> <span id="x1-1500012"></span>Version—‘:iroute version’
 
 The subcommand
 
@@ -591,7 +591,7 @@ version</span></td>
 
 prints the Irouter version in use.
 
-### <span class="titlemark">13 </span> <span id="x1-1600013"></span>Saving and Restoring Parameters—‘:iroute save’
+## <span class="titlemark">13 </span> <span id="x1-1600013"></span>Saving and Restoring Parameters—‘:iroute save’
 
 The command
 
@@ -625,7 +625,7 @@ different routing contexts. Note that the extension <span
 class="ptmb7t-x-x-120">.ir </span>is recommended for Irouter
 parameter-files.
 
-### <span class="titlemark">14 </span> <span id="x1-1700014"></span>Wizard Parameters—‘:iroute wizard’
+## <span class="titlemark">14 </span> <span id="x1-1700014"></span>Wizard Parameters—‘:iroute wizard’
 
 Miscellaneous parameters that are probably not of interest to the casual
 user are accessed via the <span class="ptmb7t-x-x-120">wizard</span>
@@ -702,7 +702,7 @@ type:
 </tbody>
 </table>
 
-### <span id="x1-1800014"></span>References
+## <span id="x1-1800014"></span>References
 
 <span class="biblabel"> \[1\]<span class="bibsp">   </span></span><span
 id="Xarnold"></span>M.H. Arnold and W.S. Scott, “An Interactive Maze

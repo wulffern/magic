@@ -55,7 +55,7 @@ tutorial:</span>
 </tbody>
 </table>
 
-### <span class="titlemark">1 </span> <span id="x1-10001"></span>Continuous Design-Rule Checking
+## <span class="titlemark">1 </span> <span id="x1-10001"></span>Continuous Design-Rule Checking
 
 When you are editing a layout with Magic, the system automatically
 checks design rules on your behalf. Every time you paint or erase, and
@@ -81,7 +81,7 @@ metal (blue), some of which are too close to each other or too narrow.
 Try painting and erasing metal to make the error paint go away and
 re-appear again.
 
-### <span class="titlemark">2 </span> <span id="x1-20002"></span>Getting Information about Errors
+## <span class="titlemark">2 </span> <span id="x1-20002"></span>Getting Information about Errors
 
 In many cases, the reason for a design-rule violation will be obvious to
 you as soon as you see the error paint. However, Magic provides several
@@ -161,7 +161,7 @@ underneath the box to see if any have errors in them. For each cell with
 errors, <span class="ptmb7t-x-x-120">:drc count </span>will print out a
 count of the number of error areas.
 
-### <span class="titlemark">3 </span> <span id="x1-30003"></span>Errors in Hierarchical Layouts
+## <span class="titlemark">3 </span> <span id="x1-30003"></span>Errors in Hierarchical Layouts
 
 The design-rule checker works on hierarchical layouts as well as single
 cells. There are three overall rules that describe the way that Magic
@@ -233,7 +233,7 @@ an interaction area of a cell may also appear in the cell’s parent.
 Fixing the error in the subcell will cause the error in the parent to go
 away also.
 
-### <span class="titlemark">4 </span> <span id="x1-40004"></span>Turning the Checker Off
+## <span class="titlemark">4 </span> <span id="x1-40004"></span>Turning the Checker Off
 
 We hope that in most cases the checker will run so quickly and quietly
 that you hardly know it’s there. However, there will probably be some
@@ -331,7 +331,7 @@ for later. To turn the checker back on permanently, invoke the command
 </tbody>
 </table>
 
-### <span class="titlemark">5 </span> <span id="x1-50005"></span>Porting Layouts from Other Systems
+## <span class="titlemark">5 </span> <span id="x1-50005"></span>Porting Layouts from Other Systems
 
 You should not need to read this section if you’ve created your layout
 from scratch using Magic or have read it from CIF using Magic’s CIF or
