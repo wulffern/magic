@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut6
+title: 06 Design-Rule Checking
 math: true
 ---
 

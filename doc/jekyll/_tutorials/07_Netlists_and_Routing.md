@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut7
+title: 07 Netlists and Routing
 math: true
 ---
 

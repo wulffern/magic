@@ -1,6 +1,6 @@
 ---
 layout: post
-title: copyright
+title: Copyright
 math: true
 ---
 

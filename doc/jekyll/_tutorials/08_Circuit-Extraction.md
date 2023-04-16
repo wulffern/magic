@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut8
+title: 08 Circuit-Extraction
 math: true
 ---
 

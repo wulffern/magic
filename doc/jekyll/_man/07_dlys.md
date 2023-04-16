@@ -1,0 +1,89 @@
+---
+layout: post
+title: 07 dlys
+math: true
+---
+
+
+
+* TOC
+{:toc }
+
+# NAME
+
+dlys - format of .dlys files read by the SCALD simulator and timing
+verifier
+
+# DESCRIPTION
+
+The SCALD simulator and timing verifier can accept information about the
+actual delays of wires in a circuit. This delay information is described
+in a **.dlys** file, which consists of a sequence of records, one for
+each electrical net. Each record begins with the signal name for the net
+(note that this is the SCALD signal name, i.e., the name given by the
+user to the entire net, and not usually the name of one of the pins in
+the net), followed by an **=**, then a comma-separated list of the
+terminals in the net and their associated delay, with the list
+terminated by a semicolon. The end of the file is marked with a second
+semicolon.
+
+The elements of the comma-separated list for each net take the form
+
+*location*** \[***min***:***max***\]**
+
+where *location* is the full hierarchical SCALD name of the physical pin
+to which the delay is computed, and *min* and *max* are the best-case
+and worst-case wire delay in nanoseconds (both are floating-point
+numbers). The assumption is that only a single driver exists per net, so
+all delays are computed from this driver. If a net has multiple drivers,
+then the interpretation of delays is up to the program reading this file
+(e.g, *min* delays are taken from the fastest driver, *max* from the
+slowest).
+
+Here is an example **.dlys** file:
+
+    (APS )ALU STATUS BITS I1<0> =
+    	(APS MR 3V6 R1 1P )IN#63	[ 0.3 : 0.4 ],
+    	(APS APS 4RI RFC RF )OUT	[ 0.5 : 0.7 ];
+    (APS )ALU STATUS BITS I1<1> =
+    	(APS APS 4ALUD DCD )AN#12	[ 1.4 : 1.6 ],
+    	(APS APS 4ALUD DCD )AN#8	[ 1.1 : 1.3 ],
+    	(APS APS 4ALUD DCD )AN#9	[ 1.1 : 1.3 ],
+    	(APS APS 4ALUD DCD )AN#10	[ 1.1 : 1.3 ],
+    	(APS APS 4ALUD DCD )AN#11	[ 1.1 : 1.3 ],
+    	(APS MR 3V2 R1 1P )#23	[ 0.6 : 0.8 ],
+    	(APS MR 3V6 R1 1P )#62	[ 0.3 : 0.4 ],
+    	(APS APS 4ALUD DCD )	[ 0.4 : 0.6 ],
+    	(APS APS 4ALUD DCD )#1	[ 0.4 : 0.6 ],
+    	(APS APS 4ALUD DCD )#2	[ 0.4 : 0.6 ],
+    	(APS APS 4ALUD DCD )#3	[ 0.4 : 0.6 ],
+    	(APS APS 4ALUD DCD )#4	[ 0.7 : 0.8 ],
+    	(APS APS 4ALUD DCD )#5	[ 0.7 : 0.8 ];
+    ;
+
+Although it is not good practice, it is possible to omit the actual pin
+names from the *location* names and only give the path to the part; the
+example above shows several cases where the final pin name is missing.
+Since the timing verifier and simulator have the original SCALD netlist
+available, they are usually able to use the signal name to determine the
+net, and then use the part's path to identify which pin of the net is
+meant. This is accurate when a net connects to at most one pin per part;
+if it connects to more than one pin per part then there is ambiguity
+over which pin is meant. Usually, though, this ambiguity results in only
+a small inaccuracy, since the delay to different pins on the same part
+is usually similar. Also, if delay is capacitive, the delay to all pins
+in a net will be the same anyway, so there is no inaccuracy.
+
+# SEE ALSO
+
+ext2dlys (1), ext (5), sim (5)
+
+# BUGS
+
+There should be some way to specify which pins are drivers and which are
+receivers in a net.
+
+The ability to omit pin names is dangerous; although it usually works it
+can introduce large inaccuracies when the parts are large compared to
+the sizes of the wires used to connect them, as might be the case on a
+silicon PCB.

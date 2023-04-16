@@ -19,7 +19,7 @@ author:
   email: tim@opencircuitdesign.com
 
 description: >-
-  Magic tutorial
+  Magic documentationx
 domain: "analogicus.com"
 baseurl: "/magic" # the subpath of your site, e.g. /blog
 url: "analogicus.com" # the base hostname & protocol for your site, e.g. http://example.com
@@ -34,17 +34,20 @@ minima:
 collections:
   tutorials:
     output: true
+  man:
+    output: true
 
 # Build settings
 markdown: kramdown
 
-remote_theme: wulffern/minima
+
 plugins:
   - jekyll-feed
   - jemoji
   - jekyll-seo-tag
   - jekyll-remote-theme
 
+remote_theme: wulffern/minima
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
@@ -53,6 +56,8 @@ exclude:
    - Gemfile
    - Gemfile.lock
    - node_modules
+   - genposts.py
+   - tmp
 #   - vendor/bundle/
 #   - vendor/cache/
 #   - vendor/gems/

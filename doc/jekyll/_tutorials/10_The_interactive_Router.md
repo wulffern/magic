@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut10
+title: 10 The interactive Router
 math: true
 ---
 

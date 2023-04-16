@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut3
+title: 03 Advanced Painting
 math: true
 ---
 

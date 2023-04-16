@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut2
+title: 02 Basic Painting and Selection
 math: true
 ---
 

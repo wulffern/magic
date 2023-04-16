@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut4
+title: 04 Cell Hierarchies 
 math: true
 ---
 

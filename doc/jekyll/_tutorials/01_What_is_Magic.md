@@ -1,6 +1,6 @@
 ---
 layout: post
-title: tut1
+title: 01 What is Magic
 math: true
 ---
 
