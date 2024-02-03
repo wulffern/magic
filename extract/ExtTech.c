@@ -577,6 +577,87 @@ ExtGetZAxis(tile, height, thick)
 }
 #endif  /* THREE_D */
 
+/*
+ * ----------------------------------------------------------------------------
+ *
+ * ExtPrintPath --
+ *
+ *	Print the path where extraction files will be written
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Output.
+ *
+ * ----------------------------------------------------------------------------
+ */
+
+void
+ExtPrintPath(dolist)
+    bool dolist;
+{
+    if (ExtLocalPath == NULL)
+    {
+	if (dolist)
+	{
+#ifdef MAGIC_WRAPPER
+	    Tcl_SetObjResult(magicinterp, Tcl_NewStringObj("(none)", -1));
+#else
+	    TxPrintf("(none)\n");
+#endif
+	}
+	else
+	    TxPrintf("(none)\n");
+    }
+    else
+    {
+	if (dolist)
+	{
+#ifdef MAGIC_WRAPPER
+	    Tcl_SetObjResult(magicinterp, Tcl_NewStringObj(ExtLocalPath, -1));
+#else
+	    TxPrintf("%s\n", ExtLocalPath);
+#endif
+	}
+	else
+	    TxPrintf("The extraction path is: %s\n", ExtLocalPath);
+    }
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ *
+ * ExtSetPath --
+ *
+ * Set the current extraction path to 'path', unless 'path' is "none" or
+ * "(none)", in which case clear the path and set it to NULL.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Just told you.
+ *
+ * ----------------------------------------------------------------------------
+ */
+
+void
+ExtSetPath(path)
+    char *path;
+{
+    if (path != NULL)
+    {
+	if (!strcasecmp(path, "none") || !strcasecmp(path, "(none)") ||
+			!strcasecmp(path, "null"))
+	{
+	    StrDup(&ExtLocalPath, NULL);
+	    return;
+	}
+    }
+    StrDup(&ExtLocalPath, path);
+    return;
+}
 
 /*
  * ----------------------------------------------------------------------------
@@ -807,7 +888,8 @@ extTechStyleInit(style)
 		    }
 		    else
 		    {
-			freeMagic(devptr->exts_deviceParams->pl_name);
+			if (devptr->exts_deviceParams->pl_name != NULL)
+			    freeMagic(devptr->exts_deviceParams->pl_name);
 			freeMagic(devptr->exts_deviceParams);
 			devptr->exts_deviceParams = devptr->exts_deviceParams->pl_next;
 		    }
@@ -2283,13 +2365,22 @@ ExtTechLine(sectionName, argc, argv)
 	    subcktParams = NULL;
 	    while ((paramName = strchr(argv[argc - 1], '=')) != NULL)
 	    {
-		char *mult;
+		char *mult, *offset;
+		double dval;
+
+		/* Ignore ">=" and "<=", which are handled below */ 
+		if (paramName > argv[argc - 1])
+		    if ((*(paramName - 1) == '>') || (*(paramName - 1) == '<'))
+			break;
 
 		paramName++;
 		newParam = (ParamList *)mallocMagic(sizeof(ParamList));
 		newParam->pl_count = 0;
 		newParam->pl_param[0] = *argv[argc - 1];
 		newParam->pl_param[1] = '\0';
+		newParam->pl_maximum = -1;
+		newParam->pl_minimum = 0;
+		newParam->pl_offset = 0;
 
 		if (paramName - argv[argc - 1] == 3)
 		    newParam->pl_param[1] = *(argv[argc - 1] + 1);
@@ -2310,11 +2401,131 @@ ExtTechLine(sectionName, argc, argv)
 		    newParam->pl_scale = atof(mult);
 		}
 		else
+		{
 		    newParam->pl_scale = 1.0;
+
+		    /* NOTE: If allowing both scale and offset, be sure
+		     * to distinguish between +/- used for offsets and
+		     * +/- used as sign.
+		     */
+
+		    if ((offset = strchr(paramName, '+')) != NULL)
+		    {
+			*offset = '\0';
+			offset++;
+			dval = atof(offset);
+			newParam->pl_offset = (int)(0.5 + (dval * 1000));
+		    }
+		    else if ((offset = strchr(paramName, '-')) != NULL)
+		    {
+			*offset = '\0';
+			offset++;
+			dval = -atof(offset);
+			newParam->pl_offset = (int)(0.5 + (dval * 1000));
+		    }
+		    else
+			newParam->pl_offset = 0;
+		}
 
 		newParam->pl_name = StrDup((char **)NULL, paramName);
 		newParam->pl_next = subcktParams;
 		subcktParams = newParam;
+		argc--;
+	    }
+
+	    /* Check for parameter range limits in one of these forms:	*/
+	    /* x>y, x<y, x>=y, x<=y.					*/
+
+	    while (TRUE)
+	    {
+		ParamList *chkParam;
+		char *limitstr;
+		char cond;
+		bool equal = FALSE;
+		double dval;
+		int ival;
+
+		limitstr = strchr(argv[argc - 1], '<');
+		if (limitstr == NULL)
+		    limitstr = strchr(argv[argc - 1], '>');
+		if (limitstr == NULL) break;
+
+		cond = *limitstr;
+		*limitstr = '\0';
+
+		/* If the parameter exists, then modify its min/max values.
+		 * If not, then create a parameter and fill in only the
+		 * min/max values.
+		 */
+
+		if (limitstr - argv[argc - 1] > 3)
+		{
+		    TechError("Parameter name %s can be no more than"
+			"two characters.\n", argv[argc - 1]);
+		    break;
+		}
+
+		for (chkParam = subcktParams; chkParam; chkParam =
+			chkParam->pl_next)
+		    if ((chkParam->pl_param[0] == argv[argc - 1][0]) &&
+				(chkParam->pl_param[1] == argv[argc - 1][1]))
+			break;
+
+		/* If there is no defined parameter with the given name
+		 * to be output, then create the parameter for checking
+		 * limits only.
+		 */
+
+		if (chkParam == NULL)
+		{
+		    newParam = (ParamList *)mallocMagic(sizeof(ParamList));
+		    newParam->pl_count = 0;
+		    newParam->pl_param[0] = argv[argc - 1][0];
+		    newParam->pl_param[1] = argv[argc - 1][1];
+		    newParam->pl_maximum = -1;
+		    newParam->pl_minimum = 0;
+		    newParam->pl_name = NULL;
+		    newParam->pl_scale = 1.0;
+		    newParam->pl_offset = 0;
+
+		    newParam->pl_next = subcktParams;
+		    subcktParams = newParam;
+		    chkParam = newParam;
+		}
+
+		/* Change limit */
+
+		limitstr++;
+		if (*limitstr == '=')
+		{
+		    equal = TRUE;
+		    limitstr++;
+		}
+		if (sscanf(limitstr, "%lg", &dval) == 0)
+		{
+		    TxError("Non-numeric limit \"%s\" for parameter \"%c%s\".\n",
+				limitstr, cond, argv[argc - 1]);
+		    break;
+		}
+
+		/* Convert dval to internal (integer) units.  Scale up by */
+		/* 1000 so the value can be converted if it's in microns  */
+		/* without losing precision.				  */
+		ival = (int)(0.5 + (dval * 1000));
+
+		/* Make adjustment for greater than or less than */
+		if (cond == '>')
+		{
+		    if (!equal) ival++;
+		    chkParam->pl_minimum = ival;
+		}
+		else
+		{
+		    if (!equal) ival--;
+		    chkParam->pl_maximum = ival;
+		}
+
+		/* Move to next argument */
 		argc--;
 	    }
 
@@ -2350,7 +2561,8 @@ ExtTechLine(sectionName, argc, argv)
 		    {
 			while (subcktParams != NULL)
 			{
-			    freeMagic(subcktParams->pl_name);
+			    if (subcktParams->pl_name != NULL)
+				freeMagic(subcktParams->pl_name);
 			    freeMagic(subcktParams);
 			    subcktParams = subcktParams->pl_next;
 			}
@@ -3475,9 +3687,35 @@ zinit:
 	    ExtDevice *devptr;
 
 	    for (devptr = style->exts_device[r]; devptr; devptr = devptr->exts_next)
-	    {
+	    {	
+		ParamList *chkParam;
+
 		devptr->exts_deviceSDCap *= sqfac;
 		devptr->exts_deviceGateCap *= sqfac;
+
+		for (chkParam = devptr->exts_deviceParams; chkParam;
+				chkParam = chkParam->pl_next)
+		{
+		    if (chkParam->pl_offset != 0)
+		    {
+			if (chkParam->pl_param[0] == 'a')
+			    chkParam->pl_offset /= dsq;
+			else
+			    chkParam->pl_offset /= dscale;
+		    }
+
+		    if (chkParam->pl_minimum > chkParam->pl_maximum) continue;
+		    else if (chkParam->pl_param[0] == 'a')
+		    {
+			chkParam->pl_maximum /= dsq;
+			chkParam->pl_minimum /= dsq;
+		    }
+		    else
+		    {
+			chkParam->pl_maximum /= dscale;
+			chkParam->pl_minimum /= dscale;
+		    }
+		}
 	    }
 
 	    style->exts_areaCap[r] *= sqfac;
@@ -3542,6 +3780,26 @@ zinit:
     /* needed, so normalize it back to lambda units.			*/
 
     style->exts_sideCoupleHalo /= 1000;
+
+    /* Ditto for the parameter maximum/minimum limits */
+    for (r = 0; r < DBNumTypes; r++)
+    {
+	ExtDevice *devptr;
+	ParamList *chkParam;
+
+	for (devptr = style->exts_device[r]; devptr; devptr = devptr->exts_next)
+	{
+	    for (chkParam = devptr->exts_deviceParams; chkParam;
+				chkParam = chkParam->pl_next)
+	    {
+		if (chkParam->pl_offset != 0)
+		    chkParam->pl_offset /= 1000;
+		if (chkParam->pl_minimum > chkParam->pl_maximum) continue;
+		chkParam->pl_maximum /= 1000;
+		chkParam->pl_minimum /= 1000;
+	    }
+	}
+    }
 }
 
 /*
@@ -3575,6 +3833,7 @@ ExtTechScale(scalen, scaled)
     for (i = 0; i < DBNumTypes; i++)
     {
 	ExtDevice *devptr;
+	ParamList *chkParam;
 
 	style->exts_areaCap[i] *= sqn;
 	style->exts_areaCap[i] /= sqd;
@@ -3585,6 +3844,39 @@ ExtTechScale(scalen, scaled)
 	    devptr->exts_deviceSDCap /= sqd;
 	    devptr->exts_deviceGateCap *= sqn;
 	    devptr->exts_deviceGateCap /= sqd;
+
+	    for (chkParam = devptr->exts_deviceParams; chkParam;
+				chkParam = chkParam->pl_next)
+	    {
+		if (chkParam->pl_offset != 0)
+		{
+		    if (chkParam->pl_param[0] == 'a')
+		    {
+			chkParam->pl_offset *= sqd;
+			chkParam->pl_offset /= sqn;
+		    }
+		    else
+		    {
+			chkParam->pl_offset *= scaled;
+			chkParam->pl_offset /= scalen;
+		    }
+		}
+		if (chkParam->pl_minimum > chkParam->pl_maximum) continue;
+		else if (chkParam->pl_param[0] == 'a')
+		{
+		    chkParam->pl_maximum *= sqd;
+		    chkParam->pl_maximum /= sqn;
+		    chkParam->pl_minimum *= sqd;
+		    chkParam->pl_minimum /= sqn;
+		}
+		else
+		{
+		    chkParam->pl_maximum *= scaled;
+		    chkParam->pl_maximum /= scalen;
+		    chkParam->pl_minimum *= scaled;
+		    chkParam->pl_minimum /= scalen;
+		}
+	    }
 	}
 
 	style->exts_height[i] *= scaled;

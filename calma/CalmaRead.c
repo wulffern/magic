@@ -20,12 +20,19 @@
 static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/calma/CalmaRead.c,v 1.3 2010/06/24 12:37:15 tim Exp $";
 #endif  /* not lint */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <netinet/in.h>
+
+/*
+ * C99 compat
+ * Mind: tcltk/tclmagic.h must be included prior to all the other headers
+ */
+#include "tcltk/tclmagic.h"
 
 #include "utils/magic.h"
 #include "utils/geometry.h"
@@ -75,6 +82,12 @@ bool CalmaReadOnly = FALSE;		/* Set files to read-only and
 					 * retain file position information
 					 * so cells can be written verbatim.
 					 */
+float CalmaMagScale = 1.0;		/* Scale by which to interpret the MAG
+					 * record in GDS text records.  The
+					 * default is to treat the value as
+					 * the text height in microns.  This
+					 * value reinterprets the scale.
+					 */
 bool CalmaNoDRCCheck = FALSE;		/* If TRUE, don't mark cells as needing
 					 * a DRC check;  they will be assumed
 					 * DRC clean.
@@ -100,8 +113,6 @@ extern bool CalmaDoLibrary;		/* Also used by GDS write */
 
 extern void calmaUnexpected();
 extern int calmaWriteInitFunc();
-
-bool calmaParseUnits();
 
 /*
  * Scaling.
@@ -338,6 +349,7 @@ calmaParseUnits()
     double metersPerDBUnit;
     double userUnitsPerDBUnit;
     double cuPerDBUnit;
+    bool compatible;
 
     READRH(nbytes, rtype);
 #ifdef	lint
@@ -355,6 +367,39 @@ calmaParseUnits()
 
     /* Read meters per database unit */
     if (!calmaReadR8(&metersPerDBUnit)) return (FALSE);
+
+    /* Important!  When CalmaReadOnly is TRUE, then this file will have its
+     * contents output verbatim.  But if the database units don't match,
+     * then it will get output at the wrong scale.  Setting a magnification
+     * factor on the instance when generating output might (?) work.  For
+     * now, prohibiting a GDS read in read-only mode when the database units
+     * don't match.  This forces the user either to reconsider the read-only
+     * status or to rewrite the GDS at a compatible scalefactor.
+     */
+    compatible = TRUE;
+    if (CalmaReadOnly == TRUE)
+    {
+	if (CIFCurStyle->cs_flags & CWF_ANGSTROMS)
+	{
+	    if ((int)(0.5 + metersPerDBUnit * 1e12) != 100)
+	    {
+		CalmaReadError("Incompatible scale factor of %g, must be 1e-10.\n",
+				metersPerDBUnit);
+		TxError("Cannot read this file in read-only mode.\n");
+		return FALSE;
+	    }
+	}
+	else
+	{
+	    if ((int)(0.5 + metersPerDBUnit * 1e11) != 100)
+	    {
+		CalmaReadError("Incompatible scale factor of %g, must be 1e-9.\n",
+				metersPerDBUnit);
+		TxError("Cannot read this file in read-only mode.\n");
+		return FALSE;
+	    }
+	}
+    }
 
 #ifdef	notdef
     TxPrintf("1 database unit equals %e user units\n", userUnitsPerDBUnit);
@@ -409,12 +454,9 @@ calmaParseUnits()
  * ----------------------------------------------------------------------------
  */
 
-void
-    /*VARARGS1*/
-CalmaReadError(format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
-    char *format;
-    char *a1, *a2, *a3, *a4, *a5, *a6, *a7, *a8, *a9, *a10;
+void CalmaReadError(char *format, ...)
 {
+    va_list args;
     OFFTYPE filepos;
 
     calmaTotalErrors++;
@@ -432,15 +474,18 @@ CalmaReadError(format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
                                 cifReadCellDef->cd_name);
 		fprintf(calmaErrorFile, "(byte position %"DLONG_PREFIX"d): ",
 				(dlong)filepos);
-                fprintf(calmaErrorFile, format, a1, a2, a3, a4, a5, a6, a7,
-                                a8, a9, a10);
+		va_start(args, format);
+		Vfprintf(calmaErrorFile, format, args);
+		va_end(args);
             }
         }
         else
         {
             TxError("Error while reading cell \"%s\" ", cifReadCellDef->cd_name);
 	    TxError("(byte position %"DLONG_PREFIX"d): ", (dlong)filepos);
-            TxError(format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	    va_start(args, format);	    
+	    TxErrorV(format, args);
+	    va_end(args);	    
         }
     }
     else if ((calmaTotalErrors == 100) && (CIFWarningLevel == CIF_WARN_LIMIT))

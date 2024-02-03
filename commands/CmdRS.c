@@ -786,7 +786,7 @@ CmdSelect(w, cmd)
     };
     static char *cmdSelectMsg[] =
     {
-	"[more | less | nocycle] [layers]\n"
+	"[more | less | nocycle] [layers] [at x y]\n"
         "                                [de]select paint chunk/region/net under\n"
  	"                                cursor, or [de]select subcell if cursor\n"
 	"	                         over space",
@@ -845,13 +845,14 @@ CmdSelect(w, cmd)
     CellUse *use;
     CellDef *rootBoxDef;
     Transform trans, rootTrans, tmp1;
-    Point p, rootPoint;
+    Point p, rootPoint, atPoint;
     Rect r, selarea;
     ExtRectList *rlist;
     int option;
     int feedstyle;
     bool layerspec;
     bool degenerate;
+    bool doat = FALSE;
     bool more = FALSE, less = FALSE, samePlace = TRUE;
     unsigned char labelpolicy = SEL_DO_LABELS;
 #ifdef MAGIC_WRAPPER
@@ -938,6 +939,20 @@ CmdSelect(w, cmd)
 	    if ((cmd->tx_argc >= 3) && !strncmp(cmd->tx_argv[2],
 			"cell", strlen(cmd->tx_argv[2])))
 		optionArgs = &cmd->tx_argv[2];
+	}
+
+	doat = FALSE;
+	if ((cmd->tx_argc > 3) && !strcmp(cmd->tx_argv[cmd->tx_argc - 3], "at"))
+	{
+	    Point editPoint;
+
+	    doat = TRUE;
+	    editPoint.p_x = cmdParseCoord(w, cmd->tx_argv[cmd->tx_argc - 2],
+				FALSE, TRUE);
+	    editPoint.p_y = cmdParseCoord(w, cmd->tx_argv[cmd->tx_argc - 1],
+				FALSE, FALSE);
+	    GeoTransPoint(&EditToRootTransform, &editPoint, &atPoint);
+	    cmd->tx_argc -= 3;
 	}
     }
 
@@ -1247,11 +1262,12 @@ CmdSelect(w, cmd)
 	 */
 
 	case SEL_DEFAULT:
-	    if (cmd->tx_argc > 2) goto usageError;
+
 	    if (cmd->tx_argc == 2)
 		layerspec = TRUE;
 	    else
 		layerspec = FALSE;
+
 	    goto Okay;
 	case SEL_CELL:
 	    layerspec = FALSE;
@@ -1284,9 +1300,32 @@ Okay:
 		scx.scx_area.r_ytop = scx.scx_area.r_ybot + 1;
 		degenerate = TRUE;
 	    }
+	    else if (doat)
+	    {
+		scx.scx_area.r_xbot = atPoint.p_x;
+		scx.scx_area.r_ybot = atPoint.p_y;
+		scx.scx_area.r_xtop = atPoint.p_x + 1;
+		scx.scx_area.r_ytop = atPoint.p_y + 1;
+		windCheckOnlyWindow(&w, DBWclientID);
+		window = w;
+	    }
 	    else
 	    {
+		char *aptr;
+		int i;
+
 	        window = CmdGetRootPoint((Point *) NULL, &scx.scx_area);
+
+		/* Recast command with "at x y" at the end for logging */
+		for (i = 0; i < cmd->tx_argc; i++)
+		{
+		    aptr = cmd->tx_argv[i] + strlen(cmd->tx_argv[i]);
+		    *aptr = ' ';
+		}
+		sprintf(aptr + 1, "at %di %di", scx.scx_area.r_xbot,
+				scx.scx_area.r_ybot);
+		TxRebuildCommand(cmd);
+		    
 	    }
 	    if (window == NULL) return;
 	    scx.scx_use = (CellUse *) window->w_surfaceID;
@@ -1305,17 +1344,34 @@ Okay:
 	     * same space WILL cause a crash).
 	     */
 
-	    if (!GEO_ENCLOSE(&cmd->tx_p, &lastArea)
-		    || ((lastCommand + 1) != TxCommandNumber))
+	    if (doat)
 	    {
-		samePlace = FALSE;
-		lastUse = NULL;
-	    }
+		if (!GEO_ENCLOSE(&scx.scx_area.r_ll, &lastArea)
+			|| ((lastCommand + 1) != TxCommandNumber))
+		{
+		    samePlace = FALSE;
+		    lastUse = NULL;
+		}
 
-	    lastArea.r_xbot = cmd->tx_p.p_x - MARGIN;
-	    lastArea.r_ybot = cmd->tx_p.p_y - MARGIN;
-	    lastArea.r_xtop = cmd->tx_p.p_x + MARGIN;
-	    lastArea.r_ytop = cmd->tx_p.p_y + MARGIN;
+		lastArea.r_xbot = scx.scx_area.r_xbot - MARGIN;
+		lastArea.r_ybot = scx.scx_area.r_ybot - MARGIN;
+		lastArea.r_xtop = scx.scx_area.r_xbot + MARGIN;
+		lastArea.r_ytop = scx.scx_area.r_ybot + MARGIN;
+	    }
+	    else
+	    {
+		if (!GEO_ENCLOSE(&cmd->tx_p, &lastArea)
+			|| ((lastCommand + 1) != TxCommandNumber))
+		{
+		    samePlace = FALSE;
+		    lastUse = NULL;
+		}
+
+		lastArea.r_xbot = cmd->tx_p.p_x - MARGIN;
+		lastArea.r_ybot = cmd->tx_p.p_y - MARGIN;
+		lastArea.r_xtop = cmd->tx_p.p_x + MARGIN;
+		lastArea.r_ytop = cmd->tx_p.p_y + MARGIN;
+	    }
 	    lastCommand = TxCommandNumber;
 
 	    /* If there's material under the cursor, select some paint.
@@ -1495,15 +1551,18 @@ Okay:
 		return;
 	    }
 
-	    if (cmd->tx_argc > 3) goto usageError;
+	    if (cmd->tx_argc > 3)
+		if (strcmp(cmd->tx_argv[cmd->tx_argc - 3], "at"))
+		    goto usageError;
 
 	    /* If an explicit cell use id is provided, look for that cell
 	     * and select it.  In this case, defeat all of the "multiple
 	     * click" code.
 	     */
 
-	    if ((cmd->tx_argc == 3) && (optionArgs == &cmd->tx_argv[2]) &&
-		(more == FALSE) && (less == FALSE))
+	    if (((cmd->tx_argc == 3) || (cmd->tx_argc == 6)) &&
+			(optionArgs == &cmd->tx_argv[2]) &&
+			(more == FALSE) && (less == FALSE))
 	    {
 		use = lastUse = scx.scx_use;
 		p.p_x = scx.scx_use->cu_xlo;
@@ -1511,7 +1570,7 @@ Okay:
 		trans = GeoIdentityTransform;
 		printPath = scx.scx_use->cu_id;
 	    }
-	    else if (cmd->tx_argc == 3)
+	    else if ((cmd->tx_argc == 3) || (cmd->tx_argc == 6))
 	    {
 		SearchContext scx2;
 
@@ -3159,6 +3218,17 @@ CmdStretch(w, cmd)
 	GeoTransTranslate(xdelta, ydelta, &GeoIdentityTransform, &t);
 	GeoTransRect(&t, &rootBox, &newBox);
 	DBWSetBox(rootDef, &newBox);
+
+	/* Recast the command in the usual 3-argument form for logging */
+	if (ydelta > 0)
+	    sprintf(cmd->tx_argstring, "stretch n %di", ydelta);
+	else if (ydelta < 0)
+	    sprintf(cmd->tx_argstring, "stretch s %di", -ydelta);
+	else if (xdelta > 0)
+	    sprintf(cmd->tx_argstring, "stretch e %di", xdelta);
+	else
+	    sprintf(cmd->tx_argstring, "stretch w %di", -xdelta);
+	TxRebuildCommand(cmd);
     }
 
     SelectStretch(xdelta, ydelta);

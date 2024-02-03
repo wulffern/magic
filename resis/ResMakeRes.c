@@ -831,14 +831,12 @@ ResDoContacts(contact, nodes, resList)
 	else
 	{
 	    viawidth += spacing;
-	    squaresf = (float)((contact->cp_width * cscale) - minside) / (float)viawidth;
-	    squaresf *= ExtCurStyle->exts_unitsPerLambda;
+	    squaresf = (float)((contact->cp_width * cscale) - minside);
 	    squaresf /= (float)viawidth;
 	    squaresx = (int)squaresf;
 	    squaresx++;
 
-	    squaresf = (float)((contact->cp_height * cscale) - minside) / (float)viawidth;
-	    squaresf *= ExtCurStyle->exts_unitsPerLambda;
+	    squaresf = (float)((contact->cp_height * cscale) - minside);
 	    squaresf /= (float)viawidth;
 	    squaresy = (int)squaresf;
 	    squaresy++;
@@ -896,6 +894,7 @@ ResDoContacts(contact, nodes, resList)
 
 		resistor->rr_cl = squaresy;
 		resistor->rr_width = squaresx;
+
 		resistor->rr_value =
 		    	(float)ExtCurStyle->exts_viaResist[contact->cp_type] /
 			(float)(squaresx * squaresy);

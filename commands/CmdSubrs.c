@@ -190,6 +190,11 @@ cmdScaleCoord(w, arg, is_relative, is_x, scale)
 		    return round(dval);
 	    }
 	}
+	else if (!strcmp(endptr, "u"))
+	    /* Maybe "u" is too ambiguous but it is very commonly used as
+	     * an abbreviation for "micron".
+	     */
+	    mscale = 1000;
 	else if (!strncmp(endptr, "micron", 6))
 	    mscale = 1000;
 	else if (!strncmp(endptr, "centimicron", 11) || !strcmp(endptr, "cu"))
@@ -291,7 +296,6 @@ cmdFlushCell(def, force_deref)
     bool force_deref;
 {
     CellUse *parentUse;
-    bool dereference;
 
     if (def == NULL) return;
 
@@ -324,8 +328,7 @@ cmdFlushCell(def, force_deref)
     }
     DBCellClearDef(def);
     DBCellClearAvail(def);
-    dereference = (def->cd_flags & CDDEREFERENCE) ? TRUE : FALSE;
-    (void) DBCellRead(def, TRUE, dereference, NULL);
+    (void) DBCellRead(def, TRUE, TRUE, NULL);
     DBCellSetAvail(def);
     DBReComputeBbox(def);
     DBCellSetModified(def, FALSE);

@@ -84,6 +84,10 @@ static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/
 
 int timestamp;
 
+typedef struct _celllist {
+    CellDef *cl_cell;
+    struct _celllist *cl_next;
+} CellList;
 
 /*
  * ----------------------------------------------------------------------------
@@ -107,9 +111,9 @@ DBFixMismatch()
 {
     CellDef *cellDef;
     CellUse *parentUse;
+    CellList *cl = NULL, *clnew;
     Rect oldArea, parentArea, tmp;
     int redisplay;
-    int firstOne = TRUE;
     Mismatch *tmpm;
 
     /* It's very important to disable interrupts during this section!
@@ -118,7 +122,7 @@ DBFixMismatch()
 
     redisplay = FALSE;
     if (mismatch == NULL) return;
-    TxPrintf("Processing timestamp mismatches:");
+    TxPrintf("Processing timestamp mismatches.\n");
     SigDisableInterrupts();
 
     for (tmpm = mismatch; tmpm; tmpm = tmpm->mm_next)
@@ -126,8 +130,6 @@ DBFixMismatch()
 
     while (mismatch != NULL)
     {
-	bool dereference;
-
 	/* Be careful to remove the front element from the mismatch
 	 * list before processing it, because while processing it we
 	 * may add new elements to the list.
@@ -139,8 +141,7 @@ DBFixMismatch()
 	mismatch = mismatch->mm_next;
 	if (cellDef->cd_flags & CDPROCESSED) continue;
 
-	dereference = (cellDef->cd_flags & CDDEREFERENCE) ? TRUE : FALSE;
-	(void) DBCellRead(cellDef, TRUE, dereference, NULL);
+	(void) DBCellRead(cellDef, TRUE, TRUE, NULL);
 
 	/* Jimmy up the cell's current bounding box, so the following
 	 * procedure call will absolutely and positively know that
@@ -174,15 +175,20 @@ DBFixMismatch()
 	    redisplay = TRUE;
 	}
 	cellDef->cd_flags |= CDPROCESSED;
-	if (firstOne)
-	{
-	    TxPrintf(" %s", cellDef->cd_name);
-	    firstOne = FALSE;
-	}
-	else TxPrintf(", %s", cellDef->cd_name);
-	TxFlush();	/* This is needed to prevent _doprnt screwups */
+	clnew = (CellList *)mallocMagic(sizeof(CellList));
+	clnew->cl_cell = cellDef;
+	clnew->cl_next = cl;
+	cl = clnew;
     }
     SigEnableInterrupts();
+    TxPrintf("Timestamp mismatches found in these cells: ");
+    while (cl != NULL)
+    {
+	TxPrintf("%s", cl->cl_cell->cd_name);
+	if (cl->cl_next != NULL) TxPrintf(", ");
+	freeMagic(cl);
+	cl = cl->cl_next;
+    }
     TxPrintf(".\n");
     TxFlush();
     if (redisplay) WindAreaChanged((MagWindow *) NULL, (Rect *) NULL);

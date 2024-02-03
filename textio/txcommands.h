@@ -130,9 +130,13 @@ extern void TxSetPoint();
 extern int TxGetPoint();
 extern void TxClearPoint();
 
-/* Routine to set up command logging.
+/* Routines to handle command logging.
  */
-extern void TxLogCommands();
+extern void TxLogStart();
+extern void TxLogStop();
+extern void TxLogUpdate();
+extern void TxLogSuspend();
+extern void TxLogResume();
 
 
 /* Routines for handling input events.  A typical device driver in the
@@ -154,6 +158,7 @@ extern TxCommand *TxNewCommand();
 extern void TxFreeCommand();
 extern void TxParseString();
 extern void TxDispatch();
+extern void TxRebuildCommand();
 extern int TxCommandNumber;	/* Serial number of current command. */
 
 #ifdef MAGIC_WRAPPER

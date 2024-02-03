@@ -13,9 +13,9 @@
     A.red:active {color: yellow }
   </STYLE>
 </HEAD>
-<TITLE>Magic-7.3 Command Reference</TITLE>
+<TITLE>Magic-8.3 Command Reference</TITLE>
 <BODY BACKGROUND=graphics/blpaper.gif>
-<H1> <IMG SRC=graphics/magic_title8_2.png ALT="Magic VLSI Layout Tool Version 8.2">
+<H1> <IMG SRC=graphics/magic_title8_3.png ALT="Magic VLSI Layout Tool Version 8.3">
      <IMG SRC=graphics/magic_OGL_sm.gif ALIGN="top" ALT="*"> </H1>
 
 <H2>drc</H2>
@@ -37,10 +37,18 @@ Background design rule checker control and status.
 	   <DD> Count and report error tiles in the edit cell.
 	   <DT> <B>euclidean on</B>|<B>off</B>
 	   <DD> Enable/disable Euclidean geometry checking
-	   <DT> <B>find</B> [<I>nth</I>]
-	   <DD> Locate next (or <I>nth</I>) error in current cell
+	   <DT> <B>find</B> [<I>nth</I>|<I>text</I>]
+	   <DD> Locate next (or <I>nth</I>) error in current cell;  if string
+		<I>text</I> is given instead of an integer, then search for the
+		next error of a type containing the text.
 	   <DT> <B>help</B>
 	   <DD> Print help information
+	   <DT> <B>ignore</B> [<I>text</I>|<B>none</B>]
+	   <DD> Without options, print a list of all rules that are not being
+		reported.  With option <I>text</I>, don't report rules containing
+		the string <I>text</I>.  This is cumulative;  additional calls
+		to "<B>drc ignore</B> <I>text</I>" will add rules to be ignored.
+		Cancel ignoring rules with "<B>drc ignore none</B>" (the default).
 	   <DT> <B>off</B>
 	   <DD> Turn off background checker
 	   <DT> <B>on</B>

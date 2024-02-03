@@ -251,12 +251,28 @@ ExtLabelRegions(def, connTo, nodeList, clipArea)
 		reg = (LabRegion *) extGetRegion(tp);
 		ll = (LabelList *) mallocMagic((unsigned) (sizeof (LabelList)));
 		ll->ll_label = lab;
-		ll->ll_next = reg->lreg_labels;
-		reg->lreg_labels = ll;
 		if (lab->lab_flags & PORT_DIR_MASK)
 		    ll->ll_attr = LL_PORTATTR;
 		else
 		    ll->ll_attr = LL_NOATTR;
+
+		if ((lab->lab_flags & PORT_DIR_MASK) || (reg->lreg_labels == NULL))
+		{
+		    ll->ll_next = reg->lreg_labels;
+		    reg->lreg_labels = ll;
+		}
+		else
+		{
+		    LabelList *fport = reg->lreg_labels;
+
+		    /* Place *after* any labels with LL_PORTATTR */
+		    while ((fport->ll_next != NULL) &&
+				(fport->ll_next->ll_attr == LL_PORTATTR))
+			fport = fport->ll_next;
+
+		    ll->ll_next = fport->ll_next;
+		    fport->ll_next = ll;
+		}
 		break;
 	    }
 	}
@@ -306,14 +322,15 @@ ExtLabelRegions(def, connTo, nodeList, clipArea)
 		}
 	    }
 
-	    /* This may be a "sticky label".  If it is not connected to
-	     * TT_SPACE, then create a new node region for it.  The
-	     * label must be within the clip area.
+	    /* This may be a "sticky label".  If it is not connected to a
+	     * non-electrical type (includes TT_SPACE), then create a new node
+	     * region for it.  The label must be within the clip area.
 	     */
 	    if ((ll == NULL) && (nodeList != NULL) &&
 			(GEO_SURROUND(&lab->lab_rect, clipArea) ||
 			GEO_TOUCH(&lab->lab_rect, clipArea))
-			 && (lab->lab_type != TT_SPACE))
+			 && (lab->lab_type != TT_SPACE)
+			 && TTMaskHasType(&ExtCurStyle->exts_activeTypes, lab->lab_type))
 	    {
 		nclasses = ExtCurStyle->exts_numResistClasses;
 	    	n = sizeof (NodeRegion) + (sizeof (PerimArea) * (nclasses - 1));
@@ -399,12 +416,28 @@ ExtLabelOneRegion(def, connTo, reg)
 	    {
 		ll = (LabelList *) mallocMagic((unsigned) (sizeof (LabelList)));
 		ll->ll_label = lab;
-		ll->ll_next = reg->nreg_labels;
-		reg->nreg_labels = ll;
 		if (lab->lab_flags & PORT_DIR_MASK)
 		    ll->ll_attr = LL_PORTATTR;
 		else
 		    ll->ll_attr = LL_NOATTR;
+
+		if ((lab->lab_flags & PORT_DIR_MASK) || (reg->nreg_labels == NULL))
+		{
+		    ll->ll_next = reg->nreg_labels;
+		    reg->nreg_labels = ll;
+		}
+		else
+		{
+		    LabelList *fport = reg->nreg_labels;
+
+		    /* Place *after* any labels with LL_PORTATTR */
+		    while ((fport->ll_next != NULL) &&
+				(fport->ll_next->ll_attr == LL_PORTATTR))
+			fport = fport->ll_next;
+
+		    ll->ll_next = fport->ll_next;
+		    fport->ll_next = ll;
+		}
 		break;
 	    }
 	}

@@ -61,7 +61,8 @@ static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/
 enum def_netspecial_keys {DEF_SPECNET_SHAPE = 0, DEF_SPECNET_STYLE,
 	DEF_SPECNET_USE, DEF_SPECNET_VOLTAGE, DEF_SPECNET_FIXEDBUMP,
 	DEF_SPECNET_ORIGINAL, DEF_SPECNET_PATTERN, DEF_SPECNET_ESTCAP,
-	DEF_SPECNET_WEIGHT, DEF_SPECNET_PROPERTY};
+	DEF_SPECNET_WEIGHT, DEF_SPECNET_PROPERTY, DEF_SPECNET_ROUTED,
+	DEF_SPECNET_FIXED, DEF_SPECNET_COVER, DEF_SPECNET_SHIELD };
 
 enum def_netspecial_shape_keys {
 	DEF_SPECNET_SHAPE_RING = 0,
@@ -115,6 +116,10 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 	"ESTCAP",
 	"WEIGHT",
 	"PROPERTY",
+	"ROUTED",
+	"FIXED",
+	"COVER",
+	"SHIELD",
 	NULL
     };
 
@@ -204,7 +209,7 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 		paintWidth = (rule) ? rule->width :
 				(lefl) ? lefl->info.route.width :
 				DEFAULT_WIDTH * DBLambda[1] / DBLambda[0];
-		paintExtend = (rule) ? rule->extend : paintWidth;
+		paintExtend = (rule) ? rule->width : paintWidth;
 	    }
 	}
 	else if ((*token == '+') && (special == TRUE))
@@ -213,7 +218,7 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 
 	    /* Check for SHAPE, STYLE, or USE keywords */
 	    token = LefNextToken(f, TRUE);
-	    keyword = Lookup(token, specnet_keys);
+	    keyword = LookupFull(token, specnet_keys);
 	    if (keyword < 0)
 	    {
 		LefError(DEF_INFO, "Unknown keyword \"%s\" in SPECIALNET "
@@ -236,7 +241,7 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 
 		case DEF_SPECNET_SHAPE:
 		    token = LefNextToken(f, TRUE);
-		    keyword = Lookup(token, specnet_shape_keys);
+		    keyword = LookupFull(token, specnet_shape_keys);
 		    if (keyword < 0)
 		    {
 			LefError(DEF_INFO, "Unknown SHAPE \"%s\" in SPECIALNET "
@@ -262,6 +267,16 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 		case DEF_SPECNET_FIXEDBUMP:
 		    /* Ignore this keyword */
 		    break;
+
+		case DEF_SPECNET_SHIELD:
+		    /* Treat as the following case except to absorb the next token */
+		    token = LefNextToken(f, TRUE);  /* Drop through */
+
+		case DEF_SPECNET_ROUTED:
+		case DEF_SPECNET_COVER:
+		case DEF_SPECNET_FIXED:
+		    initial = TRUE;
+		    continue;
 	    }
 	}
 	else if (!strcmp(token, "RECT"))
@@ -362,7 +377,7 @@ DefAddRoutes(rootDef, f, oscale, special, netname, ruleset, defLayerMap, annotat
 		if (rule)
 		{
 		    paintWidth = rule->width;
-		    paintExtend = rule->extend;
+		    paintExtend = rule->width;
 		}
 	    }
 	    else if (!strcmp(token, "DEFAULT"))
@@ -788,7 +803,7 @@ DefReadNonDefaultRules(f, rootDef, sname, oscale, total)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, nondef_keys);
+	keyword = LookupFull(token, nondef_keys);
 	if (keyword < 0)
 	{
 	    LefError(DEF_INFO, "Unknown keyword \"%s\" in NONDEFAULTRULES "
@@ -829,7 +844,7 @@ DefReadNonDefaultRules(f, rootDef, sname, oscale, total)
 			token = LefNextToken(f, TRUE);
 		    }
 
-		    subkey = Lookup(token, nondef_property_keys);
+		    subkey = LookupFull(token, nondef_property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown non-default rule property \"%s\" "
@@ -859,7 +874,7 @@ DefReadNonDefaultRules(f, rootDef, sname, oscale, total)
 			    	rule->lefInfo = lefl;
 				rule->width = 0;
 				rule->spacing = 0;
-				rule->extend = 0;
+				rule->extend = 0;		/* unused */
 				rule->next = ruleset->rule;
 				ruleset->rule = rule;
 			    }
@@ -909,7 +924,10 @@ DefReadNonDefaultRules(f, rootDef, sname, oscale, total)
 			    else if (lefl == NULL)
 				LefError(DEF_INFO, "No layer for non-default extension.\n");
 			    else
+			    {
+				LefError(DEF_WARNING, "Non-default extension at via not implemented.\n");
 			    	rule->extend = (int)roundf((2 * fvalue) / oscale);
+			    }
 			    break;
 			case DEF_NONDEFLAYER_DIAG:
 			    if (!inlayer)
@@ -1054,7 +1072,7 @@ DefReadNets(f, rootDef, sname, oscale, special, dolabels, annotate, total)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, net_keys);
+	keyword = LookupFull(token, net_keys);
 	if (keyword < 0)
 	{
 	    LefError(DEF_INFO, "Unknown keyword \"%s\" in NET "
@@ -1148,7 +1166,7 @@ DefReadNets(f, rootDef, sname, oscale, special, dolabels, annotate, total)
 		    else
 			token = LefNextToken(f, TRUE);
 
-		    subkey = Lookup(token, net_property_keys);
+		    subkey = LookupFull(token, net_property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown net property \"%s\" in "
@@ -1294,7 +1312,7 @@ DefReadLocation(use, f, oscale, tptr, noplace)
         if (*token != ')') goto parse_error;
         token = LefNextToken(f, TRUE);
 
-        keyword = Lookup(token, orientations);
+        keyword = LookupFull(token, orientations);
         if (keyword < 0)
         {
 	    LefError(DEF_ERROR, "Unknown macro orientation \"%s\".\n", token);
@@ -1484,7 +1502,7 @@ DefReadPins(f, rootDef, sname, oscale, total, annotate)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, pin_keys);
+	keyword = LookupFull(token, pin_keys);
 
 	if (keyword < 0)
 	{
@@ -1531,7 +1549,7 @@ DefReadPins(f, rootDef, sname, oscale, total, annotate)
 		    if (*token != '+') continue;
 
 		    token = LefNextToken(f, TRUE);
-		    subkey = Lookup(token, pin_property_keys);
+		    subkey = LookupFull(token, pin_property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown pin property \"%s\" in "
@@ -1554,7 +1572,7 @@ DefReadPins(f, rootDef, sname, oscale, total, annotate)
 			    break;
 			case DEF_PINS_PROP_USE:
 			    token = LefNextToken(f, TRUE);
-			    subkey = Lookup(token, pin_uses);
+			    subkey = LookupFull(token, pin_uses);
 			    if (subkey < 0)
 				LefError(DEF_ERROR, "Unknown pin use \"%s\"\n", token);
 			    else
@@ -1566,7 +1584,7 @@ DefReadPins(f, rootDef, sname, oscale, total, annotate)
 			    break;
 			case DEF_PINS_PROP_DIR:
 			    token = LefNextToken(f, TRUE);
-			    subkey = Lookup(token, pin_classes);
+			    subkey = LookupFull(token, pin_classes);
 			    if (subkey < 0)
 				LefError(DEF_ERROR, "Unknown pin class \"%s\"\n", token);
 			    else
@@ -1753,7 +1771,7 @@ DefReadBlockages(f, rootDef, sname, oscale, total)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, block_keys);
+	keyword = LookupFull(token, block_keys);
 
 	if (keyword < 0)
 	{
@@ -1776,7 +1794,7 @@ DefReadBlockages(f, rootDef, sname, oscale, total)
 		    if (*token == ';')
 			break;
 
-		    subkey = Lookup(token, block_property_keys);
+		    subkey = LookupFull(token, block_property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown blockage property \"%s\" in "
@@ -1883,7 +1901,7 @@ DefReadVias(f, sname, oscale, total)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, via_keys);
+	keyword = LookupFull(token, via_keys);
 
 	if (keyword < 0)
 	{
@@ -1951,7 +1969,7 @@ DefReadVias(f, sname, oscale, total)
 		    if (*token != '+') continue;
 
 		    token = LefNextToken(f, TRUE);
-		    subkey = Lookup(token, via_property_keys);
+		    subkey = LookupFull(token, via_property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown via property \"%s\" in "
@@ -2163,7 +2181,7 @@ DefReadComponents(f, rootDef, sname, oscale, total)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, component_keys);
+	keyword = LookupFull(token, component_keys);
 
 	if (keyword < 0)
 	{
@@ -2214,15 +2232,12 @@ DefReadComponents(f, rootDef, sname, oscale, total)
 
 		if (defMacro == (CellDef *)NULL)
 		{
-		    bool dereference;
-
 		    /* Before giving up, assume that this cell has a	*/
 		    /* magic .mag layout file.				*/
 		    defMacro = DBCellNewDef(token);
 		    defMacro->cd_flags &= ~CDNOTFOUND;
-		    dereference = (defMacro->cd_flags & CDDEREFERENCE) ? TRUE : FALSE;
 
-		    if (!DBCellRead(defMacro, TRUE, dereference, NULL))
+		    if (!DBCellRead(defMacro, TRUE, TRUE, NULL))
 		    {
 		        LefError(DEF_ERROR, "Cell %s is not defined.  Maybe you "
 				"have not read the corresponding LEF file?\n",
@@ -2255,7 +2270,7 @@ DefReadComponents(f, rootDef, sname, oscale, total)
 		    if (*token != '+') continue;
 
 		    token = LefNextToken(f, TRUE);
-		    subkey = Lookup(token, property_keys);
+		    subkey = LookupFull(token, property_keys);
 		    if (subkey < 0)
 		    {
 			LefError(DEF_INFO, "Unknown component property \"%s\" in "
@@ -2434,7 +2449,7 @@ DefRead(inName, dolabels, annotate, noblockage)
 
     while ((token = LefNextToken(f, TRUE)) != NULL)
     {
-	keyword = Lookup(token, sections);
+	keyword = LookupFull(token, sections);
 	if (keyword < 0)
 	{
 	    LefError(DEF_INFO, "Unknown keyword \"%s\" in DEF file; ignoring.\n", token);

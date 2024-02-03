@@ -37,7 +37,7 @@ static char rcsid[] __attribute__ ((unused)) ="$Header: /usr/cvsroot/magic-8.0/c
 #include <ctype.h>
 #include <sys/types.h>
 #include <arpa/inet.h>	/* for htons() */
-#ifdef	SYSV
+#if defined(SYSV) || defined(EMSCRIPTEN)
 #include <time.h>
 #else
 #include <sys/time.h>
@@ -682,7 +682,7 @@ calmaFullDumpZ(def, fi, outf, filename)
 
     static int hdrSkip[] = { CALMA_FORMAT, CALMA_MASK, CALMA_ENDMASKS,
 		CALMA_REFLIBS, CALMA_FONTS, CALMA_ATTRTABLE,
-		CALMA_STYPTABLE, CALMA_GENERATIONS, CALMA_UNITS, -1 };
+		CALMA_STYPTABLE, CALMA_GENERATIONS, -1 };
     static int skipBeforeLib[] = { CALMA_LIBDIRSIZE, CALMA_SRFNAME,
 		CALMA_LIBSECUR, -1 };
 
@@ -698,10 +698,14 @@ calmaFullDumpZ(def, fi, outf, filename)
     calmaSkipSet(skipBeforeLib);
     if (!calmaReadStringRecord(CALMA_LIBNAME, &libname)) goto done;
 
-    // NOTE:  CALMA_UNITS needs to be parsed to determine if units in
-    // the input file are compatible with units being used in the output
+    // CALMA_UNITS needs to be parsed to determine if units in the
+    // input file are compatible with units being used in the output
     // file.
-    calmaSkipSet(hdrSkip);
+    if (calmaParseUnits() == FALSE)
+    {
+	TxError("Error:  Library %s has incompatible database units!\n", libname);
+	return;
+    }
 
     // Record the GDS library so it will not be processed again.
     he = HashFind(&calmaLibHash, filename);
@@ -842,11 +846,8 @@ calmaProcessDefZ(def, outf, do_library)
 
     /* Read the cell in if it is not already available. */
     if ((def->cd_flags & CDAVAILABLE) == 0)
-    {
-	bool dereference = (def->cd_flags & CDDEREFERENCE) ? TRUE : FALSE;
-	if (!DBCellRead(def, TRUE, dereference, NULL))
+	if (!DBCellRead(def, TRUE, TRUE, NULL))
 	    return (0);
-    }
 
     /*
      * Flag an error if attempting to write the default (UNNAMED) cell

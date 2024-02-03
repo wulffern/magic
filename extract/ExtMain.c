@@ -52,10 +52,13 @@ extern FILE *extFileOpen();
      * See extract.h for the bit flags that may be set in the following.
      * If any are set, the corresponding warnings get generated, leaving
      * feedback messages.  If this word is zero, only errors are
-     * reported.
+     * reported.  (Update:  "do labelcheck" and "do aliases" have been
+     * added to the default options because they generally are required
+     * and would only need to be disabled under exceptional circumstances.)
      */
 int ExtDoWarn = EXTWARN_DUP|EXTWARN_FETS;
-int ExtOptions = EXT_DOALL|EXT_DOLABELCHECK;
+int ExtOptions = EXT_DOALL|EXT_DOLABELCHECK|EXT_DOALIASES;
+char *ExtLocalPath = NULL;
 
 /* --------------------------- Global data ---------------------------- */
 
@@ -376,6 +379,13 @@ ExtAll(rootUse)
     /* from bottommost back up to the top.				*/
 
     extDefListFunc(rootUse, &defList);
+
+    /* Sanity check---print wrning if there is nothing to extract */
+    if (defList == (LinkedDef *)NULL)
+    {
+	TxError("Warning:  There is nothing here to extract.\n");
+	return;
+    }
 
     /* Now reverse the list onto a stack such that the bottommost cell	*/
     /* is the first to be extracted, and so forth back up to the top.	*/
@@ -899,9 +909,9 @@ extTimestampMisMatch(def)
     int stamp;
     bool doLocal;
 
-    doLocal = (ExtOptions & EXT_DOLOCAL) ? TRUE : FALSE;
+    doLocal = (ExtLocalPath == NULL) ? FALSE : TRUE;
 
-    extFile = extFileOpen(def, (char *) NULL, "r", doLocal, (char **) NULL);
+    extFile = extFileOpen(def, (char *) NULL, "r", (char **) NULL);
     if (extFile == NULL)
 	return (TRUE);
 

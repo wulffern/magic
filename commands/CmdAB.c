@@ -50,7 +50,7 @@ static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/
  * CmdAddPath --
  *
  * Implement the "addpath" command:  append to the global cell search path.
- * (Usage superceded by extended "path" command; retained for compatibility)
+ * (Usage superseded by extended "path" command; retained for compatibility)
  *
  * Usage:
  *	addpath path
@@ -797,6 +797,13 @@ CmdBox(w, cmd)
 			ToolMoveCorner(tcorner, &cmd->tx_p, TRUE, rootBoxDef);
 			break;
 		}
+
+		/* Recast command as "box values" for logging purposes */
+		ToolGetBox(&rootBoxDef, &rootBox);
+		sprintf(cmd->tx_argstring, "box values %di %di %di %di",
+			rootBox.r_xbot, rootBox.r_ybot,
+			rootBox.r_xtop, rootBox.r_ytop);
+		TxRebuildCommand(cmd);
 		return;
 	    }
 	    else if (DBWSnapToGrid != DBW_SNAP_USER)

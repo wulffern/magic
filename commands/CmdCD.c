@@ -105,20 +105,21 @@ bool cmdDumpParseArgs();
 #define	CALMA_LABELS	10
 #define	CALMA_LIBRARY	11
 #define	CALMA_LOWER	12
-#define CALMA_MASKHINTS	13
-#define CALMA_MERGE	14
-#define CALMA_NO_STAMP	15
-#define CALMA_NO_DUP	16
-#define CALMA_ORDERING	17
-#define CALMA_READ	18
-#define CALMA_READONLY	19
-#define CALMA_RESCALE	20
-#define CALMA_WARNING	21
-#define CALMA_WRITE	22
-#define CALMA_POLYS	23
-#define CALMA_PATHS	24
-#define CALMA_UNDEFINED	25
-#define CALMA_UNIQUE	26
+#define CALMA_MAGSCALE  13
+#define CALMA_MASKHINTS	14
+#define CALMA_MERGE	15
+#define CALMA_NO_STAMP	16
+#define CALMA_NO_DUP	17
+#define CALMA_ORDERING	18
+#define CALMA_READ	19
+#define CALMA_READONLY	20
+#define CALMA_RESCALE	21
+#define CALMA_WARNING	22
+#define CALMA_WRITE	23
+#define CALMA_POLYS	24
+#define CALMA_PATHS	25
+#define CALMA_UNDEFINED	26
+#define CALMA_UNIQUE	27
 
 #define CALMA_WARN_HELP CIF_WARN_END	/* undefined by CIF module */
 
@@ -136,8 +137,6 @@ CmdCalma(w, cmd)
 #ifdef HAVE_ZLIB
     gzFile fz;
 #endif
-
-    extern int CalmaFlattenLimit;
 
     static char *gdsExts[] = {".gds", ".gds.gz", ".gds2", ".strm", "", NULL};
     static char *cmdCalmaYesNo[] = {
@@ -162,6 +161,7 @@ CmdCalma(w, cmd)
 	"labels [yes|no]	cause labels to be output when writing GDS-II",
 	"library [yes|no]	do not output the top level, only subcells",
 	"lower [yes|no]		allow both upper and lower case in labels",
+	"magscale [value]	scale to interpret text magnification 1 in microns",
 	"maskhints [yes|no]	generate mask hint properties on input",
 	"merge [yes|no]		merge tiles into polygons in the output",
 	"nodatestamp [yes|no]	write a zero value creation date stamp",
@@ -419,6 +419,27 @@ CmdCalma(w, cmd)
 	    if (option < 0)
 		goto wrongNumArgs;
 	    CalmaNoDRCCheck = (option < 4) ? TRUE : FALSE;
+	    return;
+
+	case CALMA_MAGSCALE:
+	    if (cmd->tx_argc == 2)
+	    {
+#ifdef MAGIC_WRAPPER
+		Tcl_SetObjResult(magicinterp, Tcl_NewDoubleObj((double)CalmaMagScale));
+#else
+		TxPrintf("Text magnification 1.0 = %g microns.\n");
+#endif
+		return;
+	    }
+	    else if (cmd->tx_argc != 3)
+		goto wrongNumArgs;
+
+	    if (StrIsNumeric(cmd->tx_argv[2]))
+		 CalmaMagScale = (float)atof(cmd->tx_argv[2]);
+	    else if (!strcmp(cmd->tx_argv[2], "default"))
+		 CalmaMagScale = 1.0;
+	    else
+		goto wrongNumArgs;
 	    return;
 
 	case CALMA_FLATTEN:
@@ -977,6 +998,11 @@ CmdCalma(w, cmd)
 			cmd->tx_argv[2], cmd->tx_argv[2], cmd->tx_argv[2]);
 	        return;
 	    }
+
+	    /* Ensure that there is a valid edit cell */
+	    if (EditCellUse == NULL)
+		DBWloadWindow(w, (char *)NULL, DBW_LOAD_IGNORE_TECH);
+
 	    CalmaReadFile(f, namep);
 	    (void) FCLOSE(f);
 	    return;
@@ -2711,6 +2737,14 @@ CmdCopy(w, cmd)
 	    return;
 	}
 
+	/* Recast the command as "copy to x y" so that it no longer
+	 * depends on the pointer position, for command logging.
+	 */
+	GeoTransPoint(&RootToEditTransform, &rootPoint, &editPoint);
+	sprintf(cmd->tx_argstring, "copy to %di %di\n", editPoint.p_x,
+			editPoint.p_y);
+	TxRebuildCommand(cmd);
+
 copyToPoint:
 	if (!ToolGetBox(&rootDef, &rootBox) || (rootDef != SelectRootDef))
 	{
@@ -3773,7 +3807,7 @@ CmdDelete(w, cmd)
  * new edit cell into the window containing the point tool.
  *
  * Usage:
- *	down
+ *	down [<instname>]
  *
  * Results:
  *	None.
@@ -3795,11 +3829,23 @@ CmdDown(w, cmd)
     MagWindow *w;
     TxCommand *cmd;
 {
+    CellUse *use = NULL;
     Rect area, pointArea;
     int cmdEditRedisplayFunc();		/* External declaration. */
     int cmdDownEnumFunc();		/* Forward declaration. */
 
-    if (cmd->tx_argc > 1)
+    if ((w != NULL) && (cmd->tx_argc == 2))
+    {
+	CellUse *rootUse;
+	SearchContext scx;
+
+	rootUse = (CellUse *)w->w_surfaceID;
+	bzero(&scx, sizeof(SearchContext));
+	DBTreeFindUse(cmd->tx_argv[1], rootUse, &scx);
+	use = scx.scx_use;
+    }
+
+    if ((use == NULL) && (cmd->tx_argc > 1))
     {
 	TxError("Usage: edit\nMaybe you want the \"load\" command\n");
 	return;
@@ -3822,8 +3868,18 @@ CmdDown(w, cmd)
 
     (void) ToolGetPoint((Point *) NULL, &pointArea);
     cmdFoundNewDown = FALSE;
-    (void) SelEnumCells(FALSE, (bool *) NULL, (SearchContext *) NULL,
-	    cmdDownEnumFunc, (ClientData) &pointArea);
+
+    if (use == NULL)
+    {
+	SelEnumCells(FALSE, (bool *) NULL, (SearchContext *) NULL,
+		cmdDownEnumFunc, (ClientData) &pointArea);
+    }
+    else
+    {
+	EditCellUse = use;
+	EditRootDef = use->cu_def;
+	cmdFoundNewDown = TRUE;
+    }
     if (!cmdFoundNewDown)
 	TxError("You haven't selected a new cell to edit.\n");
 
@@ -3833,6 +3889,13 @@ CmdDown(w, cmd)
     (void) WindSearch(DBWclientID, (ClientData) NULL,
 	    (Rect *) NULL, cmdEditRedisplayFunc, (ClientData) &area);
     DBWloadWindow(w, EditCellUse->cu_def->cd_name, DBW_LOAD_IGNORE_TECH);
+
+    if ((cmd->tx_argc == 1) && cmdFoundNewDown)
+    {
+	/* Recast the command with the instance name for logging */
+	sprintf(cmd->tx_argstring, "down %s", EditCellUse->cu_id);
+	TxRebuildCommand(cmd);
+    }
 }
 
 /* Search function to find the new edit cell:  look for a cell use
@@ -3907,14 +3970,15 @@ cmdDownEnumFunc(selUse, use, transform, area)
 #define EUCLIDEAN	7
 #define FIND		8
 #define DRC_HELP	9
-#define DRC_OFF		10
-#define DRC_ON		11
-#define DRC_STATUS	12
-#define DRC_STYLE	13
-#define PRINTRULES	14
-#define RULESTATS	15
-#define STATISTICS	16
-#define WHY		17
+#define DRC_IGNORE	10
+#define DRC_OFF		11
+#define DRC_ON		12
+#define DRC_STATUS	13
+#define DRC_STYLE	14
+#define PRINTRULES	15
+#define RULESTATS	16
+#define STATISTICS	17
+#define WHY		18
 
 void
 CmdDrc(w, cmd)
@@ -3934,7 +3998,10 @@ CmdDrc(w, cmd)
     bool	incremental;
     bool	doforall = FALSE;
     bool	dolist = FALSE;
+    bool	findonly;
+    int		drc_start;
     int		count_total;
+    LinkedIndex *DRCSaveRules = NULL;
     DRCCountList *dcl;
     int argc = cmd->tx_argc;
     char **argv = cmd->tx_argv;
@@ -3954,6 +4021,7 @@ CmdDrc(w, cmd)
 	"euclidean on|off	enable/disable Euclidean geometry checking",
 	"find [nth]     	locate next (or nth) error in the layout",
 	"help                   print this help information",
+	"ignore	[<text>|none]   do not report on rules with this text",
 	"off                    turn off background checker",
 	"on                     reenable background checker",
 	"status			report if the drc checker is on or off",
@@ -4000,12 +4068,12 @@ CmdDrc(w, cmd)
 	if ((argc > 2) && (option != PRINTRULES) && (option != FIND)
 	    && (option != SHOWINT) && (option != DRC_HELP) && (option != EUCLIDEAN)
 	    && (option != DRC_STEPSIZE) && (option != DRC_HALO) && (option != COUNT)
-	    && (option != DRC_STYLE))
+	    && (option != DRC_STYLE) && (option != DRC_IGNORE))
 	{
 	    badusage:
 	    TxError("Wrong arguments in \"drc %s\" command:\n", argv[1]);
-	    TxError("    :drc %s\n", cmdDrcOption[option]);
-	    TxError("Try \":drc help\" for more help.\n");
+	    TxError("    drc %s\n", cmdDrcOption[option]);
+	    TxError("Try \"drc help\" for more help.\n");
 	    return;
 	}
     }
@@ -4162,7 +4230,8 @@ CmdDrc(w, cmd)
 	    rootDef = rootUse->cu_def;
 
 	    incremental = FALSE;
-	    if (argc == 3 && StrIsInt(argv[2]))
+	    findonly = FALSE;
+	    if ((argc == 3) && StrIsInt(argv[2]))
 	    {
 		drc_nth = atoi(argv[2]);
 		if (drc_nth <= 0) drc_nth = 1;
@@ -4171,41 +4240,98 @@ CmdDrc(w, cmd)
 	    {
 	        incremental = TRUE;
 		drc_nth++;
+
+		/* If 3rd argument is a string, then look only for
+		 * rules containing the string text.
+		 */
+		if (argc == 3)
+		{
+		    int i;
+
+		    findonly = TRUE;
+		    DRCSaveRules = DRCIgnoreRules;
+		    DRCIgnoreRules = NULL;
+		    for (i = 1; i < DRCCurStyle->DRCWhySize; i++)
+		    {
+	 		if (strstr(DRCCurStyle->DRCWhyList[i], argv[2]) != NULL)
+			{
+			    LinkedIndex *newli;
+
+			    newli = (LinkedIndex *)mallocMagic(sizeof(LinkedIndex));
+			    newli->li_index = i;
+			    newli->li_next = DRCIgnoreRules;
+			    DRCIgnoreRules = newli;
+			}
+		    }
+		}
 	    }
 
-	    result = DRCFind(rootUse, &rootArea, &area, drc_nth);
-	    if (incremental && (result < 0))
+	    drc_start = -1;
+	    while (TRUE)
 	    {
-		/* 2nd pass, if we exceeded the total number of errors */
-		drc_nth = 1;
+		/* May need to loop multiple times if some error types
+		 * are being ignored.
+		 */
+
 		result = DRCFind(rootUse, &rootArea, &area, drc_nth);
-	    }
+		if (incremental && (result < 0))
+		{
+		    /* 2nd pass, if we exceeded the total number of errors */
+		    drc_nth = 1;
+		    result = DRCFind(rootUse, &rootArea, &area, drc_nth);
+		}
 
-	    if (result > 0)
-	    {
-		ToolMoveBox(TOOL_BL, &area.r_ll, FALSE, rootDef);
-		ToolMoveCorner(TOOL_TR, &area.r_ur, FALSE, rootDef);
+		/* If looping on an incremental DRC error search, and errors
+		 * are being ignored, and there are no non-ignored errors in
+		 * the search area, then quit if we have looped back around
+		 * to the starting point.
+		 */
+		if ((drc_start > 0) && (result == drc_start))
+		    break;
+
+		if (result > 0)
+		{
+		    ToolMoveBox(TOOL_BL, &area.r_ll, FALSE, rootDef);
+		    ToolMoveCorner(TOOL_TR, &area.r_ur, FALSE, rootDef);
 #ifdef MAGIC_WRAPPER
-		if (!dolist)
+		    if (!dolist)
 #endif
-		TxPrintf("Error area #%d:\n", result);
-		DRCWhy(dolist, rootUse, &area);
+		    TxPrintf("Error area #%d:\n", result);
+		    if (DRCWhy(dolist, rootUse, &area, findonly)) break;
+		    drc_nth++;
+		}
+		else if (result < 0)
+		{
+#ifdef MAGIC_WRAPPER
+		    Tcl_SetObjResult(magicinterp, Tcl_NewIntObj(-1));
+		    if (!dolist)
+#endif
+		    TxPrintf("There aren't that many errors");
+		    break;
+		}
+		else
+		{
+#ifdef MAGIC_WRAPPER
+		    Tcl_SetObjResult(magicinterp, Tcl_NewIntObj(0));
+		    if (!dolist)
+#endif
+		    TxPrintf("There are no errors in %s.\n", rootDef->cd_name);
+		    break;
+		}
+
+		if (drc_start < 0)
+		    drc_start = result;
 	    }
-	    else if (result < 0)
+	    if (findonly)
 	    {
-#ifdef MAGIC_WRAPPER
-		Tcl_SetObjResult(magicinterp, Tcl_NewIntObj(-1));
-		if (!dolist)
-#endif
-		TxPrintf("There aren't that many errors");
-	    }
-	    else
-	    {
-#ifdef MAGIC_WRAPPER
-		Tcl_SetObjResult(magicinterp, Tcl_NewIntObj(0));
-		if (!dolist)
-#endif
-		TxPrintf("There are no errors in %s.\n", rootDef->cd_name);
+		/* Delete temporary rules */
+		while (DRCIgnoreRules != NULL)
+		{
+		    freeMagic(DRCIgnoreRules);
+		    DRCIgnoreRules = DRCIgnoreRules->li_next;
+		}
+		/* Replace temporary set of rules */
+		DRCIgnoreRules = DRCSaveRules;
 	    }
 	    break;
 
@@ -4259,6 +4385,51 @@ CmdDrc(w, cmd)
 	    {
 		if ((**msg == '*') && !wizardHelp) continue;
 		TxPrintf("    %s\n", *msg);
+	    }
+	    break;
+
+	case DRC_IGNORE:
+	    /* Ignore rules containing the given text, unless the text is "none",
+	     * in which case clear the list of rules to ignore.
+	     */
+	    if (argc == 2)
+	    {
+		LinkedIndex *li;
+
+		/* Print or list rules being ignored */
+
+		li = DRCIgnoreRules;
+		while (li != NULL)
+		{
+		    TxPrintf("%s\n", DRCCurStyle->DRCWhyList[li->li_index]);
+		    li = li->li_next;
+		}
+		if (DRCIgnoreRules == NULL) TxPrintf("(none)\n");
+		break;
+	    }
+	    if (argc != 3) goto badusage;
+	    if (!strcasecmp(argv[2], "none"))
+	    {
+		while (DRCIgnoreRules != NULL)
+		{
+		    freeMagic(DRCIgnoreRules);
+		    DRCIgnoreRules = DRCIgnoreRules->li_next;
+		}
+	    }
+	    else
+	    {
+		int i;
+		LinkedIndex *newli;
+		for (i = 1; i < DRCCurStyle->DRCWhySize; i++)
+		{
+		    if (strstr(DRCCurStyle->DRCWhyList[i], argv[2]) != NULL)
+		    {
+			newli = (LinkedIndex *)mallocMagic(sizeof(LinkedIndex));
+			newli->li_index = i;
+			newli->li_next = DRCIgnoreRules;
+			DRCIgnoreRules = newli;
+		    }
+		}
 	    }
 	    break;
 
@@ -4349,7 +4520,8 @@ CmdDrc(w, cmd)
 	       DRCWhyAll(rootUse, &rootArea, NULL);
 	    else
 #endif
-	    DRCWhy(dolist, rootUse, &rootArea);
+	    if (!DRCWhy(dolist, rootUse, &rootArea, FALSE))
+		TxPrintf("No errors found.\n");
 	    break;
     }
     return;
@@ -4644,7 +4816,7 @@ cmdDumpParseArgs(cmdName, w, cmd, dummy, scx)
 {
     Point childPoint, editPoint, rootPoint;
     CellDef *def, *rootDef, *editDef;
-    bool hasChild, hasRoot, hasTrans, dereference;
+    bool hasChild, hasRoot, hasTrans;
     Rect rootBox, bbox;
     Transform *tx_cell, trans_cell;
     char **av;
@@ -4740,8 +4912,7 @@ cmdDumpParseArgs(cmdName, w, cmd, dummy, scx)
      * looked for then no new error message will be printed.
      */
     def->cd_flags &= ~CDNOTFOUND;
-    dereference = (def->cd_flags & CDDEREFERENCE) ? TRUE : FALSE;
-    if (!DBCellRead(def, TRUE, dereference, NULL))
+    if (!DBCellRead(def, TRUE, TRUE, NULL))
 	return (FALSE);
     DBReComputeBbox(def);
     dummy->cu_def = def;
@@ -5082,9 +5253,21 @@ box_error:
 
     scx->scx_use = dummy;
 
-    GeoTranslateTrans(&trans_cell, rootPoint.p_x - childPoint.p_x,
-	    rootPoint.p_y - childPoint.p_y,
-	    &scx->scx_trans);
+    /* Transform childPoint by trans_cell */
+    if (hasChild)
+    {
+	Point refpoint;
+
+	GeoTransPoint(&trans_cell, &childPoint, &refpoint);
+	GeoTranslateTrans(&trans_cell, rootPoint.p_x - refpoint.p_x,
+		rootPoint.p_y - refpoint.p_y, &scx->scx_trans);
+    }
+    else
+    {
+	GeoTranslateTrans(&trans_cell, rootPoint.p_x - childPoint.p_x,
+		rootPoint.p_y - childPoint.p_y, &scx->scx_trans);
+    }
+
     scx->scx_area = bbox;
     return TRUE;
 

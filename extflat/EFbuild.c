@@ -64,7 +64,7 @@ int   EFLayerNumNames;
 Connection *efAllocConn();
 EFNode *efBuildDevNode();
 void efNodeAddName();
-void efNodeMerge();
+EFNode *efNodeMerge();
 
 bool efConnBuildName();
 bool efConnInitSubs();
@@ -162,7 +162,50 @@ efBuildNode(def, isSubsnode, isDevSubsnode, isExtNode, nodeName, nodeCap,
     int tnew = 0;
 
     he = HashFind(&def->def_nodes, nodeName);
-    if (newname = (EFNodeName *) HashGetValue(he))
+    newname = (EFNodeName *)HashGetValue(he);
+
+    if (newname && (def->def_kills != NULL))
+    {
+	HashEntry *hek;
+	EFNodeName *nn, *knn, *nodeAlias, *lastAlias;
+
+	/* Watch for nodes that are aliases of the node that was most
+	 * recently killed.  This can occur in .res.ext files where an
+	 * equivalent node name (alias) is used as one of the node
+	 * points.  It must be regenerated as its own node and removed
+	 * from the name list of the killed node.
+	 */
+	hek = HashLookOnly(&def->def_nodes, EFHNToStr(def->def_kills->kill_name));
+	if (hek != NULL)
+        {
+            knn = (EFNodeName *) HashGetValue(hek);
+	    if ((knn != NULL) && (knn->efnn_node == newname->efnn_node))
+	    {
+		/* Remove alias from killed node's name list */
+		lastAlias = NULL;
+		for (nodeAlias = knn->efnn_node->efnode_name; nodeAlias != NULL;
+			nodeAlias = nodeAlias->efnn_next)
+		{
+		    if (!strcmp(EFHNToStr(nodeAlias->efnn_hier), nodeName))
+		    {
+			if (lastAlias == NULL)
+			    knn->efnn_node->efnode_name = nodeAlias->efnn_next;
+			else
+			    lastAlias->efnn_next = nodeAlias->efnn_next;
+			EFHNFree(nodeAlias->efnn_hier, (HierName *)NULL, HN_ALLOC);
+			freeMagic(nodeAlias);
+			break;
+		    }
+		    lastAlias = nodeAlias;
+		}
+		
+		/* Force name to be made into a new node */
+		newname = (EFNodeName *)NULL;
+	    }
+	}
+    }
+
+    if (newname)
     {
 	if (efWarn)
 	    efReadError("Warning: duplicate node name %s\n", nodeName);
@@ -188,7 +231,10 @@ efBuildNode(def, isSubsnode, isDevSubsnode, isExtNode, nodeName, nodeCap,
 		newnode->efnode_flags |= EF_SUBS_NODE;
 
 	    if (isSubsnode == TRUE)
+	    {
 		newnode->efnode_flags |= EF_GLOB_SUBS_NODE;
+		EFCompat = FALSE;
+	    }
 
 	    /* The node is a duplicate port name at a different location. */
 	    /* If EFSaveLocs is TRUE, then save the layer and position in */
@@ -491,13 +537,17 @@ efBuildKill(def, name)
  */
 
 void
-efBuildEquiv(def, nodeName1, nodeName2, resist)
+efBuildEquiv(def, nodeName1, nodeName2, resist, isspice)
     Def *def;		/* Def for which we're adding a new node name */
     char *nodeName1;	/* One of node names to be made equivalent */
     char *nodeName2;	/* Other name to be made equivalent.  One of nodeName1
 			 * or nodeName2 must already be known.
 			 */
     bool resist;	/* True if "extresist on" option was selected */
+    bool isspice;	/* Passed from EFReadFile(), is only TRUE when
+			 * running ext2spice.  Indicates that nodes are
+			 * case-insensitive.
+			 */
 {
     EFNodeName *nn1, *nn2;
     HashEntry *he1, *he2;
@@ -513,6 +563,8 @@ efBuildEquiv(def, nodeName1, nodeName2, resist)
 
     if (nn2 == (EFNodeName *) NULL)
     {
+	bool isNew = TRUE;
+
 	/* Create nodeName1 if it doesn't exist */
 	if (nn1 == (EFNodeName *) NULL)
 	{
@@ -522,11 +574,12 @@ efBuildEquiv(def, nodeName1, nodeName2, resist)
 		    nodeName1, (double)0, 0, 0,
 		    (char *) NULL, (char **) NULL, 0);
 	    nn1 = (EFNodeName *) HashGetValue(he1);
+	    isNew = FALSE;
 	}
 
 	/* Make nodeName2 be another alias for node1 */
 	efNodeAddName(nn1->efnn_node, he2,
-			EFStrToHN((HierName *) NULL, nodeName2));
+			EFStrToHN((HierName *) NULL, nodeName2), isNew);
 	return;
     }
     else if (nn2->efnn_node == (EFNode *)NULL)
@@ -540,43 +593,53 @@ efBuildEquiv(def, nodeName1, nodeName2, resist)
     if (nn1 && nn2 && (nn1->efnn_port >= 0) && (nn2->efnn_port >= 0) &&
 	    (nn1->efnn_port != nn2->efnn_port))
     {
-	if ((EFOutputFlags & EF_SHORT_MASK) != EF_SHORT_NONE)
+	bool equalByCase = FALSE;
+	if (isspice)
 	{
-	    int i;
-	    int sdev;
-	    char *argv[10], zeroarg[] = "0";
+	    /* If ports have the same name under the assumption of
+	     * case-insensitivity, then just quietly merge them.
+	     */
+	    if (!strcasecmp(nodeName1, nodeName2)) equalByCase = TRUE;
+	}
+	if (!equalByCase)
+	{
+	    if ((EFOutputFlags & EF_SHORT_MASK) != EF_SHORT_NONE)
+	    {
+		int i;
+		int sdev;
+		char *argv[10], zeroarg[] = "0";
 
-	    if ((EFOutputFlags & EF_SHORT_MASK) == EF_SHORT_R)
-		sdev = DEV_RES;
+		if ((EFOutputFlags & EF_SHORT_MASK) == EF_SHORT_R)
+		    sdev = DEV_RES;
+		else
+		    sdev = DEV_VOLT;
+
+		for (i = 0; i < 10; i++) argv[i] = zeroarg;
+		argv[0] = StrDup((char **)NULL, "0.0");
+		argv[1] = StrDup((char **)NULL, "dummy");
+		argv[4] = StrDup((char **)NULL, nodeName1);
+		argv[7] = StrDup((char **)NULL, nodeName2);
+		efBuildDevice(def, sdev, "None", &GeoNullRect, 10, argv);
+		freeMagic(argv[0]);
+		freeMagic(argv[1]);
+		freeMagic(argv[4]);
+		freeMagic(argv[7]);
+		return;
+	    }
+	    else if (!resist)
+		TxError("Warning:  Ports \"%s\" and \"%s\" are electrically shorted.\n",
+				nodeName1, nodeName2);
 	    else
-		sdev = DEV_VOLT;
-
-	    for (i = 0; i < 10; i++) argv[i] = zeroarg;
-	    argv[0] = StrDup((char **)NULL, "0.0");
-	    argv[1] = StrDup((char **)NULL, "dummy");
-	    argv[4] = StrDup((char **)NULL, nodeName1);
-	    argv[7] = StrDup((char **)NULL, nodeName2);
-	    efBuildDevice(def, sdev, "None", &GeoNullRect, 10, argv);
-	    freeMagic(argv[0]);
-	    freeMagic(argv[1]);
-	    freeMagic(argv[4]);
-	    freeMagic(argv[7]);
-	    return;
+		/* Do not merge the nodes when folding in extresist parasitics */
+		return;
 	}
-	else if (!resist)
-	{
-	    /* Flag a strong warning */
-	    TxError("Warning:  Ports \"%s\" and \"%s\" are electrically shorted.\n",
-			nodeName1, nodeName2);
-	}
-	else
-	    /* Do not merge the nodes when folding in extresist parasitics */
-	    return;
     }
 
     /* If both names exist and are for different nodes, merge them */
     if (nn1)
     {
+	EFNode *lostnode;
+
 	if (nn1->efnn_node == (EFNode *)NULL)
 	    return;		/* Repeated "equiv" statement */
 	if (nn1->efnn_node != nn2->efnn_node)
@@ -584,12 +647,30 @@ efBuildEquiv(def, nodeName1, nodeName2, resist)
 	    struct efnode *node1 = nn1->efnn_node;
 	    struct efnode *node2 = nn2->efnn_node;
     	    HashSearch hs;
+	    HashEntry *he;
 
 	    if (efWarn)
 		efReadError("Merged nodes %s and %s\n", nodeName1, nodeName2);
-	    efNodeMerge(&nn1->efnn_node, &nn2->efnn_node);
+	    lostnode = efNodeMerge(&nn1->efnn_node, &nn2->efnn_node);
 	    if (nn1->efnn_port > 0) nn2->efnn_port = nn1->efnn_port;
 	    else if (nn2->efnn_port > 0) nn1->efnn_port = nn2->efnn_port;
+
+	    /* Check if there are any device terminals pointing to the
+	     * node that was just removed.
+	     */
+	    HashStartSearch(&hs);
+	    while (he = HashNext(&def->def_devs, &hs))
+	    {
+	    	Dev *dev;
+		int n;
+
+		dev = (Dev *)HashGetValue(he);
+		for (n = 0; n < dev->dev_nterm; n++)
+		    if (dev->dev_terms[n].dterm_node == lostnode)
+			dev->dev_terms[n].dterm_node =
+				(nn1->efnn_node == NULL) ?
+				nn2->efnn_node : nn1->efnn_node;
+	    }
 
 	    /* If a node has been merged away, make sure that its name	*/
 	    /* and all aliases point to the merged name's hash.		*/
@@ -616,7 +697,7 @@ efBuildEquiv(def, nodeName1, nodeName2, resist)
 
     /* Make nodeName1 be another alias for node2 */
     efNodeAddName(nn2->efnn_node, he1,
-			EFStrToHN((HierName *) NULL, nodeName1));
+			EFStrToHN((HierName *) NULL, nodeName1), FALSE);
 }
 
 
@@ -669,7 +750,7 @@ efBuildDeviceParams(name, argc, argv)
     /* Parse arguments for each parameter */
     for (n = 0; n < argc; n++)
     {
-	char *mult;
+	char *mult, *offset;
 
 	pptr = strchr(argv[n], '=');
 	if (pptr == NULL)
@@ -691,7 +772,26 @@ efBuildDeviceParams(name, argc, argv)
 	    newparm->parm_scale = atof(mult + 1);
 	}
 	else
+	{
 	    newparm->parm_scale = 1.0;
+
+	    /* NOTE:  If extending feature to allow for both scale
+	     * and offset, be sure to distinguish between +/- as an
+	     * offset and +/- as a sign.
+	     */
+	    if ((offset = strchr(pptr + 1, '+')) != NULL)
+	    {
+		*offset = '\0';
+		newparm->parm_offset = atoi(offset + 1);
+	    }
+	    else if ((offset = strchr(pptr + 1, '-')) != NULL)
+	    {
+		*offset = '\0';
+		newparm->parm_offset = -atoi(offset + 1);
+	    }
+	    else
+		newparm->parm_offset = 0;
+	}
 
 	// For parameters defined for cell defs, copy the whole
 	// expression verbatim into parm_name.  parm_type is
@@ -1229,13 +1329,14 @@ efBuildDevNode(def, name, isSubsNode)
 	nn = (EFNodeName *) HashGetValue(he);
 	isNewNode = TRUE;
     }
-    if (isSubsNode)
+    if (isSubsNode || (nn->efnn_node->efnode_flags & EF_GLOB_SUBS_NODE))
     {
 	if (!EFHNIsGlob(nn->efnn_hier))
 	{
 	    /* This node is declared to be an implicit port */
 	    nn->efnn_node->efnode_flags |= EF_SUBS_PORT;
-	    nn->efnn_port = -1;
+	    if (isNewNode == TRUE)
+		nn->efnn_port = -1;
 	    def->def_flags |= DEF_SUBSNODES;
 	}
 	nn->efnn_node->efnode_flags |= EF_SUBS_NODE;
@@ -1687,10 +1788,11 @@ again:
  */
 
 void
-efNodeAddName(node, he, hn)
+efNodeAddName(node, he, hn, isNew)
     EFNode *node;
     HashEntry *he;
     HierName *hn;
+    bool isNew;		// If TRUE, added name is never the preferred name.
 {
     EFNodeName *newnn;
     EFNodeName *oldnn;
@@ -1701,7 +1803,8 @@ efNodeAddName(node, he, hn)
     newnn->efnn_hier = hn;
     newnn->efnn_port = -1;
     newnn->efnn_refc = 0;
-    HashSetValue(he, (char *) newnn);
+
+    HashSetValue(he, (char *)newnn);
 
     /* If the node is a port of the top level cell, denoted by flag	*/
     /* EF_TOP_PORT, then the name given to the port always stays at the	*/
@@ -1711,7 +1814,8 @@ efNodeAddName(node, he, hn)
 
     /* Link in the new name */
     oldnn = node->efnode_name;
-    if (oldnn == NULL || (EFHNBest(newnn->efnn_hier, oldnn->efnn_hier) && !topport))
+    if ((oldnn == NULL) || (EFHNBest(newnn->efnn_hier, oldnn->efnn_hier)
+		&& !topport && !isNew))
     {
 	/* New head of list */
 	newnn->efnn_next = oldnn;
@@ -1740,7 +1844,8 @@ efNodeAddName(node, he, hn)
  * make this node2 and free its memory.
  *
  * Results:
- *	Return 0 if node1 has precedence, 1 if node2 has precedence
+ *	Return the pointer to the node that is removed and will be
+ *	deallocated.
  *
  * Side effects:
  *	See above.
@@ -1748,7 +1853,7 @@ efNodeAddName(node, he, hn)
  * ----------------------------------------------------------------------------
  */
 
-void
+EFNode *
 efNodeMerge(node1ptr, node2ptr)
     EFNode **node1ptr, **node2ptr;	/* Pointers to hierarchical nodes */
 {
@@ -1759,7 +1864,7 @@ efNodeMerge(node1ptr, node2ptr)
 
     /* Sanity check: ignore if same node */
     if (*node1ptr == *node2ptr)
-	return;
+	return NULL;
 
     /* Keep the node with the greater number of entries, and merge  */
     /* the node with fewer entries into it.			    */
@@ -1927,6 +2032,8 @@ efNodeMerge(node1ptr, node2ptr)
     /* Make sure that the active node is always node1 */
     *node1ptr = keeping;
     *node2ptr = (EFNode *)NULL;	    /* Sanity check */
+
+    return removing;
 }
 
 

@@ -27,6 +27,7 @@ static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/
 #include <ctype.h>
 
 #include "tcltk/tclmagic.h"
+#include "utils/main.h"
 #include "utils/magic.h"
 #include "utils/malloc.h"
 #include "utils/geometry.h"
@@ -120,7 +121,10 @@ static bool efReadDef();
  * name of 'name', allocates a new one.  Calls efReadDef to do the
  * work of reading the def itself.  If 'dosubckt' is true, then port
  * mappings are kept.  If 'resist' is true, read in the .res.ext file
- * (from extresist) if it exists, after reading the .ext file.
+ * (from extresist) if it exists, after reading the .ext file.  If
+ * "isspice" is true, then the .ext file is being read for SPICE
+ * netlist generation, and node names should be treated as case-
+ * insensitive.
  *
  * Results:
  *	Passes on the return value of efReadDef (see below)
@@ -135,9 +139,9 @@ static bool efReadDef();
  */
 
 bool
-EFReadFile(name, dosubckt, resist, noscale)
+EFReadFile(name, dosubckt, resist, noscale, isspice)
     char *name; /* Name of def to be read in */
-    bool dosubckt, resist, noscale;
+    bool dosubckt, resist, noscale, isspice;
 {
     Def *def;
     bool  rc;
@@ -147,7 +151,7 @@ EFReadFile(name, dosubckt, resist, noscale)
 	def = efDefNew(name);
 
     locScale = 1.0;
-    rc = efReadDef(def, dosubckt, resist, noscale, TRUE);
+    rc = efReadDef(def, dosubckt, resist, noscale, TRUE, isspice);
     if (EFArgTech) EFTech = StrDup((char **) NULL, EFArgTech);
     if (EFScale == 0.0) EFScale = 1.0;
 
@@ -175,9 +179,9 @@ EFReadFile(name, dosubckt, resist, noscale)
  */
 
 bool
-efReadDef(def, dosubckt, resist, noscale, toplevel)
+efReadDef(def, dosubckt, resist, noscale, toplevel, isspice)
    Def *def;
-   bool dosubckt, resist, noscale, toplevel;
+   bool dosubckt, resist, noscale, toplevel, isspice;
 {
     int argc, ac, n;
     CellDef *dbdef;
@@ -201,10 +205,15 @@ efReadDef(def, dosubckt, resist, noscale, toplevel)
     def->def_flags |= DEF_AVAILABLE;
     name = def->def_name;
 
-    /* If cell is in main database, check if there is a file path set. */
+    /* If the search path was specified with the "-p" argument to the calling
+     * command (e.g., ext2spice or ext2sim), then use that path.
+     */
+    if (EFSearchPath != NULL)
+	inf = PaOpen(name, "r", ".ext", EFSearchPath, EFLibPath, &efReadFileName);
 
-    if ((dbdef = DBCellLookDef(name)) != NULL)
+    if ((inf == NULL) && (dbdef = DBCellLookDef(name)) != NULL)
     {
+	/* If cell is in main database, check if there is a file path set. */
 	if (dbdef->cd_file != NULL)
 	{
 	    char *filepath, *sptr;
@@ -218,18 +227,11 @@ efReadDef(def, dosubckt, resist, noscale, toplevel)
 	    freeMagic(filepath);
 	}
     }
-    if (inf == NULL)
-	inf = PaOpen(name, "r", ".ext", EFSearchPath, EFLibPath, &efReadFileName);
 
-    if (inf == NULL)
-    {
-	/* Complementary to .ext file write:  If file is in a read-only	*/
-	/* directory, then .ext	file is written to CWD.			*/
-	char *proot;
-	proot = strrchr(name, '/');
-	if (proot != NULL)
-	    inf = PaOpen(proot + 1, "r", ".ext", ".", ".", &efReadFileName);
-    }
+    /* Try with the standard search path */
+    if ((inf == NULL) && (EFSearchPath == NULL))
+	inf = PaOpen(name, "r", ".ext", Path, EFLibPath, &efReadFileName);
+
     if (inf == NULL)
     {
 #ifdef MAGIC_WRAPPER
@@ -326,7 +328,7 @@ readfile:
 
 	    /* equiv node1 node2 */
 	    case EQUIV:
-		efBuildEquiv(def, argv[1], argv[2], resist);
+		efBuildEquiv(def, argv[1], argv[2], resist, isspice);
 		break;
 
 	    /* replaces "fet" (below) */
@@ -621,13 +623,39 @@ resistChanged:
 		break;
 	}
     }
-    (void) fclose(inf);
+    fclose(inf);
+    inf = (FILE *)NULL;
 
     /* Is there an "extresist" extract file? */
     if (DoResist)
     {
 	DoResist = FALSE;	/* do this only once */
-	inf = PaOpen(name, "r", ".res.ext", EFSearchPath, EFLibPath, &efReadFileName);
+	if (EFSearchPath != NULL)
+	    inf = PaOpen(name, "r", ".res.ext", EFSearchPath,
+			EFLibPath, &efReadFileName);
+
+	if ((inf == NULL) && (dbdef = DBCellLookDef(name)) != NULL)
+	{
+	    /* If cell is in main database, check if there is a file path set. */
+	    if (dbdef->cd_file != NULL)
+	    {
+		char *filepath, *sptr;
+
+		filepath = StrDup((char **)NULL, dbdef->cd_file);
+		sptr = strrchr(filepath, '/');
+		if (sptr) {
+		    *sptr = '\0';
+		    inf = PaOpen(name, "r", ".res.ext", filepath,
+				EFLibPath, &efReadFileName);
+		}
+		freeMagic(filepath);
+	    }
+	}
+
+	/* Try with the standard search path */
+	if ((inf == NULL) && (EFSearchPath == NULL))
+	    inf = PaOpen(name, "r", ".res.ext", Path, EFLibPath, &efReadFileName);
+
 	if (inf != NULL)
 	    goto readfile;
     }
@@ -646,7 +674,8 @@ resistChanged:
     {
         use = (Use *)HashGetValue(he);
 	if ((use->use_def->def_flags & DEF_AVAILABLE) == 0)
-	    if (efReadDef(use->use_def, DoSubCircuit, resist, noscale, FALSE) != TRUE)
+	    if (efReadDef(use->use_def, DoSubCircuit, resist, noscale, FALSE,
+			isspice) != TRUE)
 		rc = FALSE;
     }
 

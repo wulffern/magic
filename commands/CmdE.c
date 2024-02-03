@@ -56,10 +56,12 @@ static char rcsid[] __attribute__ ((unused)) = "$Header: /usr/cvsroot/magic-8.0/
  *
  * Implement the "edit" command.
  * Use the cell that is currently selected as the edit cell.  If more than
- * one cell is selected, use the point to choose between them.
+ * one cell is selected, use the point to choose between them.  If the
+ * optional argument "<instname>" is provided, then edit the specified
+ * instance (if it exists in the current layout window).
  *
  * Usage:
- *	edit
+ *	edit [<instname>]
  *
  * Results:
  *	None.
@@ -82,13 +84,24 @@ CmdEdit(w, cmd)
     TxCommand *cmd;
 {
     Rect area, pointArea;
-    CellUse *usave;
+    CellUse *usave, *use = NULL;
     CellDef *csave;
     int cmdEditRedisplayFunc();		/* Forward declaration. */
     int cmdEditEnumFunc();		/* Forward declaration. */
     bool noCurrentUse = FALSE;
 
-    if (cmd->tx_argc > 1)
+    if ((w != NULL) && (cmd->tx_argc == 2))
+    {
+	CellUse *rootUse;
+	SearchContext scx;
+
+	rootUse = (CellUse *)w->w_surfaceID;
+	bzero(&scx, sizeof(SearchContext));
+	DBTreeFindUse(cmd->tx_argv[1], rootUse, &scx);
+	use = scx.scx_use;
+    }
+
+    if ((use == NULL) && (cmd->tx_argc > 1))
     {
 	TxError("Usage: edit\nMaybe you want the \"load\" command\n");
 	return;
@@ -121,10 +134,18 @@ CmdEdit(w, cmd)
     cmdFoundNewEdit = FALSE;
     csave = EditRootDef;
     usave = EditCellUse;
-    EditCellUse = NULL;
 
-    (void) SelEnumCells(FALSE, (bool *) NULL, (SearchContext *) NULL,
-	    cmdEditEnumFunc, (ClientData) &pointArea);
+    if (use == NULL)
+    {
+	EditCellUse = NULL;
+	SelEnumCells(FALSE, (bool *) NULL, (SearchContext *) NULL,
+		cmdEditEnumFunc, (ClientData) &pointArea);
+    }
+    else
+    {
+	EditCellUse = use;
+	cmdFoundNewEdit = TRUE;
+    }
 
     if (EditCellUse == (CellUse *)NULL)
     {
@@ -134,11 +155,7 @@ CmdEdit(w, cmd)
 	return;
     }
     else if (!(EditCellUse->cu_def->cd_flags & CDAVAILABLE))
-    {
-	bool dereference = (EditCellUse->cu_def->cd_flags & CDDEREFERENCE) ?
-		TRUE : FALSE;
-	DBCellRead(EditCellUse->cu_def, TRUE, dereference, NULL);
-    }
+	DBCellRead(EditCellUse->cu_def, TRUE, TRUE, NULL);
 
     if (EditCellUse->cu_def->cd_flags & CDNOEDIT)
     {
@@ -162,6 +179,14 @@ CmdEdit(w, cmd)
     GeoTransRect(&EditToRootTransform, &(EditCellUse->cu_def->cd_bbox), &area);
     (void) WindSearch(DBWclientID, (ClientData) NULL,
 	    (Rect *) NULL, cmdEditRedisplayFunc, (ClientData) &area);
+
+    if ((cmd->tx_argc == 1) && cmdFoundNewEdit)
+    {
+	/* Recast the command with the instance name for logging */
+	sprintf(cmd->tx_argstring, "edit %s", EditCellUse->cu_id);
+	TxRebuildCommand(cmd);
+    }
+
 }
 
 /* Search function to handle redisplays for CmdEdit:  it checks to
@@ -581,7 +606,7 @@ badusage:
  * EditCellUse->cu_def.
  *
  * Usage:
- *	erase [layers | cursor]
+ *	erase [layers | cursor | pick x y]
  *
  * Results:
  *	None.
@@ -613,14 +638,23 @@ CmdErase(w, cmd)
     windCheckOnlyWindow(&w, DBWclientID);
     if (w == (MagWindow *) NULL) return;
 
+    if ((cmd->tx_argc == 4) && !strcmp(cmd->tx_argv[1], "pick"))
+    {
+	Point editPoint, rootPoint;
+	editPoint.p_x = cmdParseCoord(w, cmd->tx_argv[2], FALSE, TRUE);
+	editPoint.p_y = cmdParseCoord(w, cmd->tx_argv[3], FALSE, FALSE);
+	GeoTransPoint(&EditToRootTransform, &editPoint, &rootPoint);
+	CmdPaintEraseButton(w, &rootPoint, FALSE, FALSE);
+	return;
+    }
+
     if (cmd->tx_argc > 2)
     {
-	TxError("Usage: %s [<layers> | cursor]\n", cmd->tx_argv[0]);
+	TxError("Usage: %s [<layers> | cursor | pick x y]\n", cmd->tx_argv[0]);
 	return;
     }
 
     if (!ToolGetEditBox(&editRect)) return;
-
     if (EditCellUse == NULL)
     {
         TxError("No cell def being edited!\n");
@@ -637,7 +671,16 @@ CmdErase(w, cmd)
 	(void) CmdParseLayers("*,label", &mask);
     else if (!strncmp(cmd->tx_argv[1], "cursor", 6))
     {
-	CmdPaintEraseButton(w, &cmd->tx_p, FALSE);
+	Point editPoint, rootPoint;
+
+	CmdPaintEraseButton(w, &cmd->tx_p, FALSE, TRUE);
+
+	/* Recast the command as "erase pick x y" for logging purposes */
+	CmdGetRootPoint(&rootPoint, (Rect *)NULL);
+	GeoTransPoint(&RootToEditTransform, &rootPoint, &editPoint);
+	sprintf(cmd->tx_argstring, "erase pick %di %di", editPoint.p_x,
+			editPoint.p_y);
+	TxRebuildCommand(cmd);
 	return;
     }
     else if (!CmdParseLayers(cmd->tx_argv[1], &mask))
@@ -866,10 +909,12 @@ cmdExpandFunc(use, windowMask)
 #define	EXTLENGTH	5
 #define	EXTNO		6
 #define	EXTPARENTS	7
-#define	EXTSHOWPARENTS	8
-#define	EXTSTYLE	9
-#define	EXTUNIQUE	10
-#define	EXTWARN		11
+#define EXTPATH		8
+#define	EXTSHOWPARENTS	9
+#define EXTSTEPSIZE	10
+#define	EXTSTYLE	11
+#define	EXTUNIQUE	12
+#define	EXTWARN		13
 
 #define	WARNALL		0
 #define WARNDUP		1
@@ -961,7 +1006,9 @@ CmdExtract(w, cmd)
 	"length [option]	control pathlength extraction information",
 	"no [option]		disable extractor option",
 	"parents		extract selected cell and all its parents",
+	"path [path]		if set, extract into the indicated path",
 	"showparents		show all parents of selected cell",
+	"stepsize [value]	print or set the extraction step size",
 	"style [stylename]	set current extraction parameter style",
 	"unique [option]	generate unique names when different nodes\n\
 			have the same name",
@@ -1094,6 +1141,36 @@ CmdExtract(w, cmd)
 		ExtCurStyle->exts_sideCoupleHalo = dist;
 	    break;
 
+	case EXTSTEPSIZE:
+	    if (ExtCurStyle == NULL)
+	    {
+		TxError("No extraction style set.\n");
+		return;
+	    }
+	    else if (argc == 2)
+	    {
+#ifdef MAGIC_WRAPPER
+		Tcl_Obj *tobj;
+		tobj = Tcl_NewIntObj(ExtCurStyle->exts_stepSize);
+		Tcl_SetObjResult(magicinterp, tobj);
+#else
+		TxPrintf("Extraction step size is %d\n", ExtCurStyle->exts_stepSize);
+#endif
+		return;
+	    }
+	    else if (argc != 3) goto wrongNumArgs;
+
+	    /* argv[2] is a step size */
+	    dist = cmdParseCoord(w, argv[2], TRUE, TRUE);
+	    if (dist <= 0)
+	    {
+		TxError("Bad step size.  Step size must be strictly positive.");
+		return;
+	    }
+	    else
+		ExtCurStyle->exts_stepSize = dist;
+	    break;
+
 	case EXTPARENTS:
 	    selectedUse = CmdGetSelectedCell((Transform *) NULL);
 	    if (selectedUse == NULL)
@@ -1115,6 +1192,13 @@ CmdExtract(w, cmd)
 		return;
 	    }
 	    ExtShowParents(selectedUse);
+	    return;
+
+	case EXTPATH:
+	    if (argc == 2)
+		ExtPrintPath(dolist);
+	    else
+		ExtSetPath(argv[2]);
 	    return;
 
 	case EXTSTYLE:
@@ -1192,7 +1276,6 @@ CmdExtract(w, cmd)
 		TxPrintf("%s capacitance\n", OPTSET(EXT_DOCAPACITANCE));
 		TxPrintf("%s coupling\n", OPTSET(EXT_DOCOUPLING));
 		TxPrintf("%s length\n", OPTSET(EXT_DOLENGTH));
-		TxPrintf("%s local\n", OPTSET(EXT_DOLOCAL));
 		TxPrintf("%s resistance\n", OPTSET(EXT_DORESISTANCE));
 		TxPrintf("%s label check\n", OPTSET(EXT_DOLABELCHECK));
 		TxPrintf("%s aliases\n", OPTSET(EXT_DOALIASES));
@@ -1222,10 +1305,19 @@ CmdExtract(w, cmd)
 		case DOCAPACITANCE:	option = EXT_DOCAPACITANCE; break;
 		case DOCOUPLING:	option = EXT_DOCOUPLING; break;
 		case DOLENGTH:		option = EXT_DOLENGTH; break;
-		case DOLOCAL:		option = EXT_DOLOCAL; break;
 		case DORESISTANCE:	option = EXT_DORESISTANCE; break;
 		case DOLABELCHECK:	option = EXT_DOLABELCHECK; break;
 		case DOALIASES:		option = EXT_DOALIASES; break;
+		case DOLOCAL:
+		    /* "extract do local" and "extract no local" are kept for
+		     * backwards compatibility, but now effectively implement
+		     * "extract path ." and "extract path none", respectively.
+		     */
+		    if (no)
+			StrDup(&ExtLocalPath, NULL);
+		    else
+			StrDup(&ExtLocalPath, ".");
+		    return;
 	    }
 	    if (no) ExtOptions &= ~option;
 	    else ExtOptions |= option;

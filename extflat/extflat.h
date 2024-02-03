@@ -269,6 +269,7 @@ typedef struct parm
     char	 parm_type[2];
     char	*parm_name;
     double	 parm_scale;
+    int	 	 parm_offset;
     struct parm	*parm_next;
 } DevParam;
 
@@ -388,7 +389,7 @@ extern void efHNRecord();
 extern int  efHierSrArray();
 extern int  efHierSrUses();
 extern int  efHierVisitDevs();
-extern void efNodeMerge();
+extern EFNode *efNodeMerge();
 extern void efReadError();
 extern int  efReadLine();
 extern bool efSymAdd();
@@ -416,26 +417,5 @@ extern int  EFHierVisitDevs();
 extern int  EFHierVisitResists();
 extern int  EFHierVisitCaps();
 extern int  EFHierVisitNodes();
-
-
-/* ------------------------- constants used by clients -------------- */
-
-/*
- * ANSI C definitions of arguments to EFvisit procedures
- */
-
-/* - left for documentation purposes
-
-typedef int (*capproc)(HierName *, HierName *, double, ClientData );
-
-extern int EFVisitCaps(capproc, ClientData );
-
-typedef int (*nodeproc)(EFNode *, int , double, ClientData );
-
-extern int EFVisitNodes(nodeproc , ClientData );
-
-extern int EFReadFile(char *);
-
-*/
 
 #endif /* _EXTFLAT_H */

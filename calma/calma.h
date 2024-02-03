@@ -39,6 +39,8 @@ extern bool CalmaMergeTiles;
 extern bool CalmaFlattenArrays;
 extern bool CalmaNoDRCCheck;
 extern bool CalmaFlattenUses;
+extern int  CalmaFlattenLimit;
+extern float CalmaMagScale;
 extern char **CalmaFlattenUsesByName;
 extern bool CalmaReadOnly;
 extern bool CalmaContactArrays;
@@ -63,10 +65,9 @@ extern bool CalmaWrite();
 extern void CalmaReadFile();
 extern void CalmaTechInit();
 extern bool CalmaGenerateArray();
-extern void CalmaReadError();
+extern void CalmaReadError(char *format, ...);
 
 /* C99 compat */
-extern void CalmaReadError();
 extern int  calmaAddSegment();
 extern void calmaDelContacts();
 extern void calmaElementBoundary();

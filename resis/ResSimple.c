@@ -41,7 +41,6 @@ void ResSetPathRes();
 void resPathNode();
 void resPathRes();
 Heap ResistorHeap;
-int  resRemoveLoops = FALSE;
 
 /* Forward declarations */
 
@@ -810,10 +809,12 @@ ResPruneTree(node, minTdi, nodelist1, nodelist2, resistorlist)
     {
      	currentRes = current->re_thisEl;
 	current = current->re_nextEl;
-	/* if branch points outward, call routine on subtrees */
-	if (currentRes->rr_connection1 == node)
-	    ResPruneTree(currentRes->rr_connection2, minTdi, nodelist1,
-		    nodelist2, resistorlist);
+	/* Ignore previously found loops */
+	if (!(currentRes->rr_status & RES_TDI_IGNORE))
+	    /* If branch points outward, call routine on subtrees */
+	    if (currentRes->rr_connection1 == node)
+		ResPruneTree(currentRes->rr_connection2, minTdi, nodelist1,
+			nodelist2, resistorlist);
     }
 
     /* We eliminate this branch if:
@@ -863,7 +864,6 @@ ResDoSimplify(tolerance, rctol, goodies)
     float		totalcap;
     resResistor		*res;
 
-    resRemoveLoops = FALSE;
     ResSetPathRes();
     for (node = ResNodeList; node != NULL; node = node->rn_more)
     	 bigres = MAX(bigres, node->rn_noderes);
@@ -880,7 +880,7 @@ ResDoSimplify(tolerance, rctol, goodies)
     /* we're calculating lumped values so that the capacitance  */
     /* values get calculated correctly.				*/
 
-     (void) ResDistributeCapacitance(ResNodeList,goodies->rg_nodecap);
+    (void) ResDistributeCapacitance(ResNodeList, goodies->rg_nodecap);
 
     if (((tolerance > bigres) || ((ResOptionsFlags & ResOpt_Simplify) == 0)) &&
 	    ((ResOptionsFlags & ResOpt_DoLumpFile) == 0))
@@ -893,12 +893,16 @@ ResDoSimplify(tolerance, rctol, goodies)
 
 	res = res->rr_nextResistor;
     	oldres->rr_status &= ~RES_HEAP;
+
+	/*------  NOTE:  resistors marked with RES_TDI_IGNORE are
+	 *	  part of loops but should NOT be removed.
 	if (oldres->rr_status & RES_TDI_IGNORE)
 	{
-	     ResDeleteResPointer(oldres->rr_node[0], oldres);
-	     ResDeleteResPointer(oldres->rr_node[1], oldres);
-	     ResEliminateResistor(oldres, &ResResList);
+	    ResDeleteResPointer(oldres->rr_node[0], oldres);
+	    ResDeleteResPointer(oldres->rr_node[1], oldres);
+	    ResEliminateResistor(oldres, &ResResList);
 	}
+	------*/
     }
 
     if (ResOptionsFlags & ResOpt_Tdi)
@@ -940,7 +944,6 @@ ResDoSimplify(tolerance, rctol, goodies)
 	    goodies->rg_Tdi != -1)
 	return 0;
 
-
     /* Simplify network; resistors are still in milliohms, so use
      * millitolerance.
      */
@@ -963,7 +966,6 @@ ResDoSimplify(tolerance, rctol, goodies)
 	}
         if (ResOriginNode != NULL)
         {
-
             /* if Tdi is enabled, prune all branches whose end nodes	*/
 	    /* have time constants less than the tolerance.		*/
 
@@ -1047,7 +1049,12 @@ ResSetPathRes()
 
 /*
  *-------------------------------------------------------------------------
+ * resPathNode ---
  *
+ *	Given node "node", add every resistor connected to the node, and
+ *	for which the node on the other side has not been processed, to
+ *	the heap.  Node is marked with FINISHED to prevent going 'round
+ *	and 'round loops.
  *-------------------------------------------------------------------------
  */
 
@@ -1075,6 +1082,18 @@ resPathNode(node)
 /*
  *-------------------------------------------------------------------------
  *
+ * resPathRes ---
+ *
+ *	Given resistor "res" pulled from the heap (in heap order, which
+ *	is the highest valued resistor currently in the heap):
+ *
+ *	If both ends of the resistor have been processed, then we have
+ *	a loop, and should return.
+ *
+ *	Otherwise, call resPathNode() on the node of whichever end of
+ *	the resistor has not yet been processed, thus continuing through
+ *	the path from the origin.
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -1095,12 +1114,7 @@ resPathRes(res)
     if (flag0 && flag1)
     {
         res->rr_status |= RES_TDI_IGNORE;
-	if (resRemoveLoops)
-	{
-	    ResDeleteResPointer(node0, res);
-	    ResDeleteResPointer(node1, res);
-	    ResEliminateResistor(res, &ResResList);
-	}
+	/* Loop found---return without calling resPathNode() */
     }
     else if (flag0)
     {

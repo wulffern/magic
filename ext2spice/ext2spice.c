@@ -875,7 +875,7 @@ runexttospice:
 	sprintf(spcesDefaultOut, "%s.spice", inName);
 
     /* Read the hierarchical description of the input circuit */
-    if (EFReadFile(inName, TRUE, esDoExtResis, FALSE) == FALSE)
+    if (EFReadFile(inName, TRUE, esDoExtResis, FALSE, TRUE) == FALSE)
     {
 	EFDone();
         return;
@@ -1230,7 +1230,7 @@ main(argc, argv)
     }
 
     /* Read the hierarchical description of the input circuit */
-    if (EFReadFile(inName, TRUE, esDoExtResis, FALSE) == FALSE)
+    if (EFReadFile(inName, TRUE, esDoExtResis, FALSE, TRUE) == FALSE)
     {
 	exit (1);
     }
@@ -1899,7 +1899,8 @@ topVisit(def, doStub)
 		pname = stmp;
 	    }
 	    else
-		pname = nodeSpiceName(snode->efnode_name->efnn_hier, NULL);
+		// pname = nodeSpiceName(snode->efnode_name->efnn_hier, NULL);
+		pname = nodeSpiceName(nodeName->efnn_hier, NULL);
 
 	    hep = HashLookOnly(&portNameTable, pname);
 	    if (hep == (HashEntry *)NULL)
@@ -2009,8 +2010,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 				* esScale * esScale * plist->parm_scale
 				* 1E-12);
 		    else
-			esSIvalue(esSpiceF, 1.0E-12 * parmval * scale * scale
-				* esScale * esScale);
+			esSIvalue(esSpiceF, 1.0E-12 * (parmval + plist->parm_offset)
+				* scale * scale * esScale * esScale);
 		}
 		else
 		{
@@ -2075,7 +2076,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 			fprintf(esSpiceF, "%g", parmval * scale
 				* esScale * plist->parm_scale * 1E-6);
 		    else
-			esSIvalue(esSpiceF, 1.0E-12 * parmval * scale * esScale);
+			esSIvalue(esSpiceF, 1.0E-12 * (parmval + plist->parm_offset)
+				* scale * esScale);
 		}
 		else
 		{
@@ -2138,7 +2140,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 			fprintf(esSpiceF, "%g", l * scale * esScale
 				* plist->parm_scale * 1E-6);
 		    else
-			esSIvalue(esSpiceF, 1.0E-6 * l * scale * esScale);
+			esSIvalue(esSpiceF, 1.0E-6 * (l + plist->parm_offset)
+				* scale * esScale);
 		}
 		else
 		{
@@ -2161,7 +2164,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 				    fprintf(esSpiceF, "%g", dval * scale * esScale
 						* plist->parm_scale * 1E-6);
 				else
-				    esSIvalue(esSpiceF, 1.0E-6 * dval * scale * esScale);
+				    esSIvalue(esSpiceF, (dval + plist->parm_offset)
+						* scale * esScale * 1.0E-6);
 				dparam->parm_name[0] = '\0';
 				break;
 			    }
@@ -2178,7 +2182,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 		    fprintf(esSpiceF, "%g", w * scale * esScale
 				* plist->parm_scale * 1E-6);
 		else
-		    esSIvalue(esSpiceF, 1.0E-6 * w * scale * esScale);
+		    esSIvalue(esSpiceF, 1.0E-6 * (w + plist->parm_offset)
+				* scale * esScale);
 		break;
 	    case 's':
 		fprintf(esSpiceF, " %s=", plist->parm_name);
@@ -2194,7 +2199,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 		    fprintf(esSpiceF, "%g", dev->dev_rect.r_xbot * scale
 				* esScale * plist->parm_scale * 1E-6);
 		else
-		    esSIvalue(esSpiceF, 1.0E-6 * dev->dev_rect.r_xbot * scale * esScale);
+		    esSIvalue(esSpiceF, (dev->dev_rect.r_xbot + plist->parm_offset)
+				* scale * esScale * 1.0E-6);
 		break;
 	    case 'y':
 		fprintf(esSpiceF, " %s=", plist->parm_name);
@@ -2204,7 +2210,8 @@ spcWriteParams(dev, hierName, scale, l, w, sdM)
 		    fprintf(esSpiceF, "%g", dev->dev_rect.r_ybot * scale
 				* esScale * plist->parm_scale * 1E-6);
 		else
-		    esSIvalue(esSpiceF, 1.0E-6 * dev->dev_rect.r_ybot * scale * esScale);
+		    esSIvalue(esSpiceF, (dev->dev_rect.r_ybot + plist->parm_offset)
+				* scale * esScale * 1.0E-6);
 		break;
 	    case 'r':
 		fprintf(esSpiceF, " %s=", plist->parm_name);
@@ -3098,6 +3105,7 @@ esSIvalue(file, value)
     float value;
 {
     char suffix = '\0';
+    int precision;
     float avalue;
 
     avalue = fabsf(value);
@@ -3143,10 +3151,30 @@ esSIvalue(file, value)
 	value /= 1.0E3;
     }
 
+    /* Note that "%g" is preferred because it produces more readable
+     * output.  However, it changes the definition of the precision
+     * from significant digits after the radix to total significant
+     * digits.  Determine the proper precision to use by reading
+     * back the formatted value and comparing to the original value.
+     */
+
+    for (precision = 3; precision < 9; precision++)
+    {
+	int vtrunc, ptrunc;
+	char ptest[32];
+	float pvalue;
+
+	sprintf(ptest, "%.*g", precision, value);
+	sscanf(ptest, "%f", &pvalue);
+	vtrunc = (int)(0.5 + (value * 1e6));
+	ptrunc = (int)(0.5 + (pvalue * 1e6));
+	if (vtrunc == ptrunc) break;
+    }
+
     if (suffix == '\0')
-	fprintf(file, "%.3g", value);
+	fprintf(file, "%.*g", precision, value);
     else
-	fprintf(file, "%.3g%c", value, suffix);
+	fprintf(file, "%.*g%c", precision, value, suffix);
 }
 
 /*
@@ -4246,31 +4274,47 @@ devMergeVisit(dev, hc, scale, trans)
 	    else /* cfp->hierName != hierName */
 		 break;
 mergeThem:
+	    /* Default case is to add counts */
+	    m = esFMult[cfp->esFMIndex] + esFMult[fp->esFMIndex];
+
 	    switch(dev->dev_class)
 	    {
 		case DEV_MSUBCKT:
 		case DEV_MOSFET:
 		case DEV_ASYMMETRIC:
 		case DEV_FET:
-		    m = esFMult[cfp->esFMIndex] + (fp->w / cfp->w);
+		    if (cfp->w > 0)
+			m = esFMult[cfp->esFMIndex] + (fp->w / cfp->w);
 		    break;
 		case DEV_RSUBCKT:
 		case DEV_RES:
 		    if (fp->dev->dev_type == esNoModelType)
-		        m = esFMult[cfp->esFMIndex] + (fp->dev->dev_res
-				/ cfp->dev->dev_res);
+		    {
+			if (cfp->dev->dev_res > 0)
+			    m = esFMult[cfp->esFMIndex] + (fp->dev->dev_res
+					/ cfp->dev->dev_res);
+		    }
 		    else
-		        m = esFMult[cfp->esFMIndex] + (fp->l / cfp->l);
+		    {
+			if (cfp->l > 0)
+			    m = esFMult[cfp->esFMIndex] + (fp->l / cfp->l);
+		    }
 		    break;
 		case DEV_CSUBCKT:
 		case DEV_CAP:
 		case DEV_CAPREV:
 		    if (fp->dev->dev_type == esNoModelType)
-		        m = esFMult[cfp->esFMIndex] + (fp->dev->dev_cap
-				/ cfp->dev->dev_cap);
+		    {
+			if (cfp->dev->dev_cap > 0)
+			    m = esFMult[cfp->esFMIndex] + (fp->dev->dev_cap
+					/ cfp->dev->dev_cap);
+		    }
 		    else
-		        m = esFMult[cfp->esFMIndex] +
-				((fp->l  * fp->w) / (cfp->l * cfp->w));
+		    {
+			if ((cfp->l > 0) && (cfp->w > 0))
+			    m = esFMult[cfp->esFMIndex] +
+					((fp->l  * fp->w) / (cfp->l * cfp->w));
+		    }
 		    break;
 	    }
 	    setDevMult(fp->esFMIndex, DEV_KILLED);

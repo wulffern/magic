@@ -14,13 +14,12 @@ depend: ${DEPEND_FILE}
 
 ${DEPEND_FILE}:
 	${CC} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${DEPEND_FLAG} ${DEPSRCS} | \
-	sed -e "/#/D" -e "/ \//s/ \/.*\.h//" -e "/  \\\/D" \
-	> ${DEPEND_FILE}
+	sed -e "/#/D" -e "/ \//s/ \/.*\.h//" -e "/  \\\/D" > ${DEPEND_FILE}
 
 # Original Depend file generating line:
 #	${CC} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${DEPEND_FLAG} ${SRCS} > ${DEPEND_FILE}
 
-.c.o:	../database/database.h
+${OBJS}: %.o: ${SRCS} ../database/database.h
 	@echo --- compiling ${MODULE}/$*.o
 	${RM} $*.o
 	${CC} ${CFLAGS} ${CPPFLAGS} ${DFLAGS}  -c $*.c
@@ -47,10 +46,15 @@ ${DESTDIR}${BINDIR}/${MODULE}${EXEEXT}: ${MODULE}${EXEEXT}
 	${RM} ${DESTDIR}${BINDIR}/${MODULE}${EXEEXT}
 	${CP} ${MODULE}${EXEEXT} ${DESTDIR}${BINDIR}
 
+.PHONY: clean
 clean:
 	${RM} ${CLEANS}
 
 tags: ${SRCS} ${LIB_SRCS}
 	ctags ${SRCS} ${LIB_SRCS}
 
+# If "include" is unqualified, it will attempt to build all targets of "include"
+# So, we gate the include, only running it if "clean" is not the target
+ifneq ($(MAKECMDGOALS),clean)
 include ${DEPEND_FILE}
+endif

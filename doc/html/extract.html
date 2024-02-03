@@ -13,9 +13,9 @@
     A.red:active {color: yellow }
   </STYLE>
 </HEAD>
-<TITLE>Magic-7.3 Command Reference</TITLE>
+<TITLE>Magic-8.3 Command Reference</TITLE>
 <BODY BACKGROUND=graphics/blpaper.gif>
-<H1> <IMG SRC=graphics/magic_title8_2.png ALT="Magic VLSI Layout Tool Version 8.2">
+<H1> <IMG SRC=graphics/magic_title8_3.png ALT="Magic VLSI Layout Tool Version 8.3">
      <IMG SRC=graphics/magic_OGL_sm.gif ALIGN="top" ALT="*"> </H1>
 
 <H2>ext, extract</H2>
@@ -80,7 +80,11 @@ Circuit netlist extractor
 			same directory as the .mag file from which it is
 			derived, unless the .mag file is in a directory which
 			is not writable.  In that case, the .ext file will also
-			be written to the current working directory.
+			be written to the current working directory. <P>
+			<I>Note:</I>  As of magic version 8.3.404, "<B>extract
+			do local</B>" effectively implements "<B>extract path .</B>"
+			and "<B>extract no local</B>" implements "<B> extract
+			path none</B>".
 		  <DT> <B>labelcheck</B>
 		  <DD> Check for labels which have zero area and connect
 			to a subcell on the edge;  this case is rare but is
@@ -121,15 +125,51 @@ Circuit netlist extractor
 		  <DD>
 		</DL>
 	      </BLOCKQUOTE>
-	
+	   <DT> <B>halo</B> [<I>distance</I>]
+	   <DD> Return or set the maximum distance between shapes for which
+		sidewall coupling is considered.  <I>distance</I> is in
+		the units of snap distance (lambda, by default), but like
+		all distances may be specified with a suffix like "um" for
+		physical distance.  The default value is set by the technology
+		file.  Smaller values will decrease the parasitic capacitance
+		extraction time at the expense of accuracy.  When <I>distance</I>
+		is not specified, the value returned is always in internal
+		units.
 	   <DT> <B>help</B>
 	   <DD> Print help information
+	   <DT> <B>path</B> [<I>pathname</I>|<B>none</B>]
+	   <DD> Extract locally into the directory <I>pathname</I>.  If
+		<I>pathname</I> does not exist, then magic will attempt to
+		create it.  If it cannot be created, then the behavior will
+		be to save extract files in the current working directory.
+		If no path is set, or if <B>none</B> is specified as the
+		path, then the behavior will be to extract files in the
+		same directory as where the magic database (<B>.mag</B>)
+		file is located, unless that directory is unwritable by
+		the user, in which case the file is extracted to the
+		current working diretory.  Note that "<B>extract do local</B>"
+		is the same as "<B>extract path .</B>" and "<B>extract no local</B>"
+		is the same as "<B>extract path none</B>".  Also note that
+		netlist generation is independent of extraction, and needs to
+		specify the same path as used by <B>extract path</B>, e.g.,
+		"<B>ext2spice -p</B> <I>pathname</I>".
 	   <DT> <B>parents</B>
 	   <DD> Extract the selected cell and all its parents
 	   <DT> <B>showparents</B>
 	   <DD> List the cell and all parents of selected cell.  Note that
 		this is not really an extract option and is superceded by
 		the <B>cellname</B> command.
+	   <DT> <B>stepsize</B> [<I>distance</I>]
+	   <DD> Return or set the step size used when breaking a layout into
+		smaller parts for more efficient extraction.  <I>distance</I>
+		is in the units of snap distance (lambda, by default), but like
+		all distances may be specified with a suffix like "um" for
+		physical distance.  The default value is set by the technology
+		file.  Both large and small values make extraction inefficient,
+		and finding the optimal step size is largely trial-and-error.
+		The step size in a tech file has most likely already been
+		optimized for extraction speed.  When <I>distance</I> is not
+		specified, the value returned is always in internal units.
 	   <DT> [<B>list</B>|<B>listall</B>] <B>style</B> [<I>stylename</I>]
 	   <DD> Set the current extraction style to <I>stylename</I>.
 		Without arguments, print the current extraction style.

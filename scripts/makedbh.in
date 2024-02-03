@@ -1,0 +1,105 @@
+#!@PYTHON3@
+
+# makes the "database.h" (1st argument, $1) file from "database.h.in"
+# (2nd argument, $2), setting various mask operation definitions
+# according to the number of words implied by the value of TT_MAXTYPES
+import re
+import sys
+
+database_h_in = open(sys.argv[1], encoding="utf8").read()
+
+maxtypes_rx = re.compile(r"#define\s+TT_MAXTYPES\s+(\d+)")
+
+match = maxtypes_rx.findall(database_h_in)
+if len(match) == 0:
+    print("Bad regular expression in " + sys.argv[0] + ": Cannot "
+	+ "generate database/database.h!", file=sys.stderr)
+    exit(-1)
+
+maxtypes = int(match[0])
+
+# Find derived values from bits per word
+# Note that bits-per-word should be determined from the compiler, but
+# 32 bits per word has always been hardwired into magic.
+#
+bpw = 32
+maskwords = (maxtypes + bpw - 1) // bpw
+
+# Prepare Output String
+out_string = database_h_in
+
+
+def p(string):
+    global out_string
+    out_string += string
+
+
+# Generated macros
+def add_generated_mask_macro(name, expression, *, connector=","):
+    global maskwords
+
+    p("#define " + name + " ( \\\n")
+    for i in reversed(range(maskwords)):
+        p("\t" + expression.format(i=i))
+        if i == 0:
+            p(")\n\n")
+        else:
+            p(connector + " \\\n")
+
+
+add_generated_mask_macro(
+    "TTMaskZero(m)",
+    "(m)->tt_words[{i}] = 0",
+)
+add_generated_mask_macro(
+    "TTMaskIsZero(m)",
+    "(m)->tt_words[{i}] == 0",
+    connector=" &&",
+)
+add_generated_mask_macro(
+    "TTMaskEqual(m, n)",
+    "(m)->tt_words[{i}] == (n)->tt_words[{i}]",
+    connector=" &&",
+)
+add_generated_mask_macro(
+    "TTMaskIntersect(m, n)",
+    "((m)->tt_words[{i}] & (n)->tt_words[{i}])",
+    connector=" ||",
+)
+add_generated_mask_macro(
+    "TTMaskCom(m)",
+    "((m)->tt_words[{i}] = ~(m)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskCom2(m, n)",
+    "((m)->tt_words[{i}] = ~(n)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskSetMask(m, n)",
+    "((m)->tt_words[{i}] |= (n)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskSetMask3(m, n, o)",
+    "((m)->tt_words[{i}] |= (n)->tt_words[{i}] | (o)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskAndMask(m, n)",
+    "((m)->tt_words[{i}] &= (n)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskAndMask3(m, n, o)",
+    "((m)->tt_words[{i}] = (n)->tt_words[{i}] & (o)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskClearMask(m, n)",
+    "((m)->tt_words[{i}] &= ~(n)->tt_words[{i}])",
+)
+add_generated_mask_macro(
+    "TTMaskClearMask3(m, n, o)",
+    "((m)->tt_words[{i}] = (n)->tt_words[{i}] & ~(o)->tt_words[{i}])",
+)
+
+p("#endif /* _DATABASE_H */\n")
+
+with open(sys.argv[2], "w", encoding="utf8") as f:
+    f.write(out_string)
