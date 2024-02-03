@@ -289,6 +289,11 @@ bpBinArraySizeIt(Rect *bbox,            /* bin array bbox */
 
     for(e=elements; e; e=e->e_link)
     {
+
+      if(!e || !(&e->e_rect) || !((&e->e_rect)->r_xtop) || !((&e->e_rect)->r_xbot)){
+        continue;
+      }
+
       int ew = GEO_WIDTH(&e->e_rect);
       int eh = GEO_HEIGHT(&e->e_rect);
 
