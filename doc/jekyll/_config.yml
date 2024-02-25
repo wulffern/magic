@@ -19,7 +19,7 @@ author:
   email: tim@opencircuitdesign.com
 
 description: >-
-  Magic documentationx
+  Magic documentation
 domain: "analogicus.com"
 baseurl: "/magic" # the subpath of your site, e.g. /blog
 url: "analogicus.com" # the base hostname & protocol for your site, e.g. http://example.com
