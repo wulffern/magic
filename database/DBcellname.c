@@ -637,7 +637,6 @@ DBTopPrint(mw, dolist)
 
 int strcmpbynum(const char *s1, const char *s2)
 {
-
     /* Like strcasecmp() but compare sequences of digits numerically */
     for (;;)
     {
@@ -660,9 +659,7 @@ int strcmpbynum(const char *s1, const char *s2)
 	}
 	else
 	{
-	    char *lim1 = 0;
-        char *lim2 = 0;
-
+	    char *lim1, *lim2;
 	    unsigned long n1 = strtoul(s1, &lim1, 10);
 	    unsigned long n2 = strtoul(s2, &lim2, 10);
 	    if (n1 > n2)
