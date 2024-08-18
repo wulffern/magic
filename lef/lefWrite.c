@@ -1468,7 +1468,8 @@ lefWriteMacro(def, f, scale, setback, pinonly, toplayer, domaster)
 	    // Check for net names to ignore for antenna checks.
 	    if (!ignored)
 		for (lnn = lefIgnoreNets; lnn; lnn = lnn->lnn_next)
-		    if (!strcmp(lnn->lnn_name, lab->lab_text))
+		    if (!strcmp(lnn->lnn_name, lab->lab_text) ||
+				!strcmp(lnn->lnn_name, "*"))
 			ignored = TRUE;
 
 	    if (!ignored || (setback != 0))
@@ -2178,7 +2179,7 @@ LefWriteAll(rootUse, writeTopCell, lefTech, lefHide, lefPinOnly, lefTopLayer,
     bool recurse;
 {
     HashTable propHashTbl, siteHashTbl;
-    CellDef *def, *rootdef;
+    CellDef *def, *rootdef, *err_def;
     FILE *f;
     char *filename;
     float scale = CIFGetOutputScale(1000);	/* conversion to microns */
@@ -2186,9 +2187,11 @@ LefWriteAll(rootUse, writeTopCell, lefTech, lefHide, lefPinOnly, lefTopLayer,
     rootdef = rootUse->cu_def;
 
     /* Make sure the entire subtree is read in */
-    if (DBCellReadArea(rootUse, &rootdef->cd_bbox, TRUE))
+    err_def = DBCellReadArea(rootUse, &rootdef->cd_bbox, TRUE);
+    if (err_def != NULL)
     {
 	TxError("Could not read entire subtree of the cell.\n");
+	TxError("Failed on cell %s.\n", err_def->cd_name);
 	return;
     }
 
