@@ -975,11 +975,11 @@ CmdFlush(w, cmd)
 
     if (def->cd_flags & (CDMODIFIED|CDSTAMPSCHANGED|CDBOXESCHANGED))
     {
-	prompt = TxPrintString("Really throw away all changes made"
-			" to cell %s? ", def->cd_name);
-	action = TxDialog(prompt, actionNames, 0);
-	if (action == 0)	/* No */
-	    return;
+        //prompt = TxPrintString("Really throw away all changes made"
+//			" to cell %s? ", def->cd_name);
+//	action = TxDialog(prompt, actionNames, 0);
+//	if (action == 0)	/* No */
+//	    return;
     }
 
     cmdFlushCell(def, dereference);
