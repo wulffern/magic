@@ -375,7 +375,7 @@ glTransYs(int wy)
  * Set the OpenGL viewport (projection matrix) for the current window
  *----------------------------------------------------------------------
  */
-int
+void
 oglSetProjection(llx, lly, width, height)
     int llx, lly, width, height;
 {
@@ -557,6 +557,8 @@ pipehandler()
 
 	entry = HashLookOnly(&grOGLWindowTable, ExposeEvent->window);
 	mw = (entry) ? (MagWindow *)HashGetValue(entry) : 0;
+	if (!mw)
+	    break;
 
 	screenRect.r_xbot = ExposeEvent->x;
 	screenRect.r_xtop = ExposeEvent->x + ExposeEvent->width;
@@ -718,14 +720,16 @@ oglSetDisplay (dispType, outFileName, mouseFileName)
     grSetCharSizePtr = groglSetCharSize;
     grFillPolygonPtr = groglFillPolygon;
 
-    if (execFailed) {
+    if (execFailed)
+    {
         TxError("Execution failed!\n");
         return FALSE;
     }
 
     TxAdd1InputDevice(fileno(stdin), grOGLWStdin, (ClientData) NULL);
 
-    if(!GrOGLInit()){
+    if (!GrOGLInit())
+    {
 	return FALSE;
     }
     GrScreenRect.r_xbot = 0;

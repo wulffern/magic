@@ -688,8 +688,8 @@ dbCellReadDef(f, cellDef, ignoreTech, dereference)
 			    freeMagic(argv[1]);
 			    freeMagic(argv[0]);
 			}
-#endif
 		    }
+#endif
 		}
 		if (strcmp(DBTechName, tech))
 		{
@@ -2017,6 +2017,7 @@ badTransform:
 		    char argstr[1024];
 
 		    githash1[0] = '\0';
+		    githash2[0] = '\0';
 
 		    /* Remove the file component */
 		    sl1ptr = strrchr(pathptr, '/');
@@ -2148,7 +2149,7 @@ badTransform:
 	    /* default path but the new cell has a (different) path.	*/
 	    /* The paths only match if pathptr is the CWD.		*/
 
-	    else if ((pathptr != NULL) && (*pathptr != '\0'))
+	    else if (*pathptr != '\0')
 	    {
 		bool pathOK = FALSE;
 		char *cwddir = getenv("PWD");
@@ -2487,8 +2488,8 @@ dbReadProperties(cellDef, line, len, f, scalen, scaled)
 			/* Skip forward four values in pvalueptr */
 			for (n = 0; n < 4; n++)
 			{
-			    while (!isspace(*pptr)) pptr++;
-			    while (isspace(*pptr) && (*pptr != '\0')) pptr++;
+			    while ((*pptr != '\0') && !isspace(*pptr)) pptr++;
+			    while ((*pptr != '\0') && isspace(*pptr)) pptr++;
 			}
 		    }
 		}
@@ -3034,7 +3035,7 @@ dbFgets(line, len, f)
 {
     char *cs;
     int l;
-    int c;
+    int c = EOF;
 
     do
     {

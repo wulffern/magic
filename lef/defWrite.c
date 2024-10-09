@@ -330,7 +330,7 @@ defnodeCount(node, res, cap, total)
 	if (pwr && (!strcmp(cp, pwr)))
 	{
 	    /* Diagnostic */
-	    TxPrintf("Node %s matches VDD variable definition!\n");
+	    TxPrintf("Node %s matches VDD variable definition!\n", cp);
 	    node->efnode_flags |= EF_SPECIAL;
 	}
 
@@ -338,7 +338,7 @@ defnodeCount(node, res, cap, total)
 	if (pwr && (!strcmp(cp, pwr)))
 	{
 	    /* Diagnostic */
-	    TxPrintf("Node %s matches GND variable definition!\n");
+	    TxPrintf("Node %s matches GND variable definition!\n", cp);
 	    node->efnode_flags |= EF_SPECIAL;
 	}
 
@@ -441,7 +441,7 @@ char *defHNsprintfPrefix(hierName, str, divchar)
     char *cp, c;
 
     if (hierName->hn_parent)
-	str = defHNsprintfPrefix(hierName->hn_parent, str);
+	str = defHNsprintfPrefix(hierName->hn_parent, str, divchar);
 
     cp = hierName->hn_name;
     while (*str++ = *cp++) ;
@@ -2285,8 +2285,7 @@ defCountCompFunc(cellUse, total)
     int sy = cellUse->cu_yhi - cellUse->cu_ylo + 1;
     // TxPrintf("Diagnostic: cell %s %d %d\n", cellUse->cu_id, sx, sy);
     ASSERT(sx >= 0 && sy >= 0, "Valid array");
-
-    (*total) += sx * sy;	/* Increment the count of uses */
+    (*total) += (unsigned long)sx * sy;	/* Increment the count of uses */
 
     return 0;	/* Keep the search going */
 }

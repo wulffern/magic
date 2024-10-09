@@ -389,7 +389,7 @@ extBasic(def, outFile)
 	    if (propfound)
 	    {
 		token = strtok(NULL, " ");
-		if ((token == NULL) || !sscanf(token, "%d", &llx))
+		if ((token == NULL) || (sscanf(token, "%d", &llx) != 1))
 		    propfound = FALSE;
 		else
 		    llx *= ExtCurStyle->exts_unitsPerLambda;
@@ -397,7 +397,7 @@ extBasic(def, outFile)
 	    if (propfound)
 	    {
 		token = strtok(NULL, " ");
-		if ((token == NULL) || !sscanf(token, "%d", &lly))
+		if ((token == NULL) || (sscanf(token, "%d", &lly) != 1))
 		    propfound = FALSE;
 		else
 		    lly *= ExtCurStyle->exts_unitsPerLambda;
@@ -405,7 +405,7 @@ extBasic(def, outFile)
 	    if (propfound)
 	    {
 		token = strtok(NULL, " ");
-		if ((token == NULL) || !sscanf(token, "%d", &urx))
+		if ((token == NULL) || (sscanf(token, "%d", &urx) != 1))
 		    propfound = FALSE;
 		else
 		    urx *= ExtCurStyle->exts_unitsPerLambda;
@@ -414,7 +414,7 @@ extBasic(def, outFile)
 	    if (propfound)
 	    {
 		token = strtok(NULL, " ");
-		if ((token == NULL) || !sscanf(token, "%d", &ury))
+		if ((token == NULL) || (sscanf(token, "%d", &ury) != 1))
 		    propfound = FALSE;
 		else
 		    ury *= ExtCurStyle->exts_unitsPerLambda;
@@ -427,14 +427,14 @@ extBasic(def, outFile)
 		    case DEV_FET:
 			/* Read area */
 			token = strtok(NULL, " ");
-			if ((token == NULL) || !sscanf(token, "%d", &w))
+			if ((token == NULL) || (sscanf(token, "%d", &w) != 1))
 			    propfound = FALSE;
 			else
 			    w *= ExtCurStyle->exts_unitsPerLambda *
 			    	   ExtCurStyle->exts_unitsPerLambda;
 			/* Read perimeter */
 			token = strtok(NULL, " ");
-			if ((token == NULL) || !sscanf(token, "%d", &l))
+			if ((token == NULL) || (sscanf(token, "%d", &l) != 1))
 			    propfound = FALSE;
 			else
 			    l *= ExtCurStyle->exts_unitsPerLambda;
@@ -444,13 +444,13 @@ extBasic(def, outFile)
 		    case DEV_BJT:
 			/* Read width */
 			token = strtok(NULL, " ");
-			if ((token == NULL) || !sscanf(token, "%d", &w))
+			if ((token == NULL) || (sscanf(token, "%d", &w) != 1))
 			    propfound = FALSE;
 			else
 			    w *= ExtCurStyle->exts_unitsPerLambda;
 			/* Read length */
 			token = strtok(NULL, " ");
-			if ((token == NULL) || !sscanf(token, "%d", &l))
+			if ((token == NULL) || (sscanf(token, "%d", &l) != 1))
 			    propfound = FALSE;
 			else
 			    l *= ExtCurStyle->exts_unitsPerLambda;
@@ -460,13 +460,13 @@ extBasic(def, outFile)
 			{
 			    /* Read width */
 			    token = strtok(NULL, " ");
-			    if ((token == NULL) || !sscanf(token, "%d", &w))
+			    if ((token == NULL) || (sscanf(token, "%d", &w) != 1))
 				propfound = FALSE;
 			    else
 				w *= ExtCurStyle->exts_unitsPerLambda;
 			    /* Read length */
 			    token = strtok(NULL, " ");
-			    if ((token == NULL) || !sscanf(token, "%d", &l))
+			    if ((token == NULL) || (sscanf(token, "%d", &l) != 1))
 				propfound = FALSE;
 			    else
 				l *= ExtCurStyle->exts_unitsPerLambda;
@@ -479,14 +479,14 @@ extBasic(def, outFile)
 			{
 			    /* Read area */
 			    token = strtok(NULL, " ");
-			    if ((token == NULL) || !sscanf(token, "%d", &w))
+			    if ((token == NULL) || (sscanf(token, "%d", &w) != 1))
 				propfound = FALSE;
 			    else
 				w *= ExtCurStyle->exts_unitsPerLambda *
 				     ExtCurStyle->exts_unitsPerLambda;
 			    /* Read perimeter */
 			    token = strtok(NULL, " ");
-			    if ((token == NULL) || !sscanf(token, "%d", &l))
+			    if ((token == NULL) || (sscanf(token, "%d", &l) != 1))
 				propfound = FALSE;
 			    else
 				l *= ExtCurStyle->exts_unitsPerLambda;
@@ -612,7 +612,7 @@ extSetResist(reg)
 	reg->nreg_pa[n].pa_perim = perim = extResistPerim[n];
 	if (area > 0 && perim > 0)
 	{
-	    v = (double) (perim*perim - 16*area);
+	    v = (double) ((dlong)perim * perim - 16 * area);
 
 	    /* Approximate by one square if v < 0 */
 	    if (v < 0) s = 0; else s = sqrt(v);
@@ -1078,15 +1078,15 @@ ExtSortTerminals(tran, ll)
 	{
 	    p1 = &(tran->tr_termpos[nsd]);
 	    p2 = &(tran->tr_termpos[nsd+1]);
-	    if( p2->pnum > p1->pnum )
+	    if (p2->pnum > p1->pnum)
 		continue;
-	    else if( p2->pnum == p1->pnum )
+	    else if (p2->pnum == p1->pnum)
 	    {
-		if( p2->pt.p_x > p1->pt.p_x )
+		if (p2->pt.p_x > p1->pt.p_x)
 		    continue;
-		else if( p2->pt.p_x == p1->pt.p_x && p2->pt.p_y > p1->pt.p_y )
+		else if (p2->pt.p_x == p1->pt.p_x && p2->pt.p_y > p1->pt.p_y)
 		    continue;
-		else if( p2->pt.p_x == p1->pt.p_x && p2->pt.p_y == p1->pt.p_y )
+		else if (p2->pt.p_x == p1->pt.p_x && p2->pt.p_y == p1->pt.p_y)
 		{
 		    TxPrintf("Extract error:  Duplicate tile position, ignoring\n");
 		    continue;
@@ -3476,17 +3476,17 @@ extTransPerimFunc(bp)
 
 		    /* update the region tile position */
 
-		    if( DBPlane(TiGetType(otile)) < pos->pnum )
+		    if (DBPlane(TiGetType(otile)) < pos->pnum)
 		    {
 			pos->pnum = DBPlane(TiGetType(otile));
 			pos->pt = otile->ti_ll;
 		    }
-		    else if( DBPlane(TiGetType(otile)) == pos->pnum )
+		    else if (DBPlane(TiGetType(otile)) == pos->pnum)
 		    {
-			if( LEFT(otile) < pos->pt.p_x )
+			if (LEFT(otile) < pos->pt.p_x)
 			    pos->pt = otile->ti_ll;
-			else if( LEFT(otile) == pos->pt.p_x &&
-				BOTTOM(otile) < pos->pt.p_y )
+			else if (LEFT(otile) == pos->pt.p_x &&
+				BOTTOM(otile) < pos->pt.p_y)
 			    pos->pt.p_y = BOTTOM(otile);
 		    }
 		}
